@@ -68,7 +68,7 @@ class FhMdInlineTextTest {
         val hasBold = text.spanStyles.any { it.item.fontWeight == FontWeight.Bold }
         val hasItalic = text.spanStyles.any { it.item.fontStyle == FontStyle.Italic }
         val hasStrike = text.spanStyles.any { it.item.textDecoration == TextDecoration.LineThrough }
-        val hasInlineCode = text.spanStyles.any { it.item.fontFamily == style.inlineCode.fontFamily }
+        val hasInlineCode = text.spanStyles.any { it.item.fontFamily == style.inline.inlineCode.fontFamily }
 
         assertTrue(hasBold)
         assertTrue(hasItalic)
@@ -167,8 +167,8 @@ class FhMdInlineTextTest {
         val linkStyle = link.styles?.style
 
         assertNotNull(linkStyle)
-        assertEquals(style.linkStyle.color, linkStyle?.color)
-        assertEquals(style.linkStyle.textDecoration, linkStyle?.textDecoration)
+        assertEquals(style.inline.link.color, linkStyle?.color)
+        assertEquals(style.inline.link.textDecoration, linkStyle?.textDecoration)
     }
 
     @Test
@@ -204,7 +204,7 @@ class FhMdInlineTextTest {
         assertEquals("See docs and code.", rendered.text)
         assertEquals(1, rendered.getLinkAnnotations(0, rendered.length).size)
         assertNotNull(
-            rendered.spanStyles.firstOrNull { it.item.fontFamily == FhMdStyle().inlineCode.fontFamily },
+            rendered.spanStyles.firstOrNull { it.item.fontFamily == FhMdStyle().inline.inlineCode.fontFamily },
         )
     }
 

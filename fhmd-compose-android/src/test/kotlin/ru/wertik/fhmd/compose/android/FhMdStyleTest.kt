@@ -6,13 +6,23 @@ import org.junit.Test
 class FhMdStyleTest {
 
     @Test
-    fun `heading levels are clamped to supported range`() {
+    fun `typography heading levels are clamped to supported range`() {
         val style = FhMdStyle()
 
-        assertEquals(style.heading1, style.heading(-10))
-        assertEquals(style.heading1, style.heading(1))
-        assertEquals(style.heading4, style.heading(4))
-        assertEquals(style.heading6, style.heading(6))
-        assertEquals(style.heading6, style.heading(42))
+        assertEquals(style.typography.heading1, style.heading(-10))
+        assertEquals(style.typography.heading1, style.heading(1))
+        assertEquals(style.typography.heading4, style.heading(4))
+        assertEquals(style.typography.heading6, style.heading(6))
+        assertEquals(style.typography.heading6, style.heading(42))
+    }
+
+    @Test
+    fun `compatibility accessors still mirror grouped styles`() {
+        val style = FhMdStyle()
+
+        assertEquals(style.typography.paragraph, style.paragraph)
+        assertEquals(style.inline.inlineCode, style.inlineCode)
+        assertEquals(style.code.text, style.codeBlock)
+        assertEquals(style.table.headerText, style.tableHeaderText)
     }
 }

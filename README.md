@@ -61,7 +61,10 @@ Next draft notes: [`0.1.0-alpha07`](docs/releases/0.1.0-alpha07.md).
   - task list items (`[x]` / `[ ]`)
 - Renderer:
   - Compose renderer for `FhMdDocument`
-  - basic default styles (`FhMdStyle`)
+  - root rendering via `LazyColumn` for long documents
+  - markdown parsing off main thread (`Dispatchers.Default`)
+  - grouped style model (`FhMdStyle.typography`, `inline`, `layout`, `quote`, `code`, `table`, `thematicBreak`, `image`)
+  - compatibility accessors for v0.1 flat style fields remain available
   - link click callback: `onLinkClick: (String) -> Unit`
   - link safety filter (`http`, `https`, `mailto`)
   - image safety filter (`http`, `https`; unsafe schemes fallback to text)

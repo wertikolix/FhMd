@@ -6,8 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
@@ -67,9 +65,7 @@ class MainActivity : ComponentActivity() {
                     val context = LocalContext.current
                     FhMd(
                         markdown = markdown,
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .verticalScroll(rememberScrollState()),
+                        modifier = Modifier.padding(16.dp),
                         onLinkClick = { link ->
                             Toast.makeText(context, "link clicked: $link", Toast.LENGTH_SHORT).show()
                         },

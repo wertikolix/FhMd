@@ -14,16 +14,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import ru.wertik.fhmd.core.CommonmarkFhMdParser
 import ru.wertik.fhmd.core.FhMdBlock
 import ru.wertik.fhmd.core.FhMdDocument
@@ -45,8 +53,18 @@ fun FhMd(
     onLinkClick: (String) -> Unit = noOpLinkClick,
 ) {
     val parserKey = parser.cacheKey()
-    val document = remember(markdown, parserKey) {
-        parser.parse(markdown)
+    val emptyDocument = remember { FhMdDocument(emptyList()) }
+    var latestDocument by remember(parserKey) { mutableStateOf(emptyDocument) }
+    val document by produceState(
+        initialValue = latestDocument,
+        markdown,
+        parserKey,
+    ) {
+        val parsed = withContext(Dispatchers.Default) {
+            parser.parse(markdown)
+        }
+        latestDocument = parsed
+        value = parsed
     }
     FhMd(
         document = document,
@@ -63,11 +81,14 @@ fun FhMd(
     style: FhMdStyle = defaultStyle,
     onLinkClick: (String) -> Unit = noOpLinkClick,
 ) {
-    Column(
+    LazyColumn(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(style.blockSpacing),
+        verticalArrangement = Arrangement.spacedBy(style.layout.blockSpacing),
     ) {
-        document.blocks.forEach { block ->
+        itemsIndexed(
+            items = document.blocks,
+            key = { index, _ -> index },
+        ) { _, block ->
             FhMdBlockNode(
                 block = block,
                 style = style,
@@ -108,12 +129,12 @@ private fun FhMdBlockNode(
             }
             InlineTextNode(
                 text = paragraphText,
-                textStyle = style.paragraph,
+                textStyle = style.typography.paragraph,
             )
         }
 
         is FhMdBlock.ListBlock -> Column(
-            verticalArrangement = Arrangement.spacedBy(style.nestedBlockSpacing),
+            verticalArrangement = Arrangement.spacedBy(style.layout.nestedBlockSpacing),
         ) {
             block.items.forEachIndexed { index, item ->
                 Row {
@@ -125,12 +146,12 @@ private fun FhMdBlockNode(
                     )
                     Text(
                         text = marker,
-                        style = style.paragraph,
-                        modifier = Modifier.width(style.listMarkerWidth),
+                        style = style.typography.paragraph,
+                        modifier = Modifier.width(style.layout.listMarkerWidth),
                     )
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(style.nestedBlockSpacing),
+                        verticalArrangement = Arrangement.spacedBy(style.layout.nestedBlockSpacing),
                     ) {
                         item.blocks.forEach { listItemBlock ->
                             FhMdBlockNode(
@@ -149,15 +170,15 @@ private fun FhMdBlockNode(
         ) {
             Box(
                 modifier = Modifier
-                    .width(style.quoteStripeWidth)
+                    .width(style.quote.stripeWidth)
                     .fillMaxHeight()
-                    .background(style.quoteStripeColor),
+                    .background(style.quote.stripeColor),
             )
             Column(
                 modifier = Modifier
-                    .padding(start = style.quoteSpacing)
+                    .padding(start = style.quote.spacing)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(style.nestedBlockSpacing),
+                verticalArrangement = Arrangement.spacedBy(style.layout.nestedBlockSpacing),
             ) {
                 block.blocks.forEach { nested ->
                     FhMdBlockNode(
@@ -171,11 +192,11 @@ private fun FhMdBlockNode(
 
         is FhMdBlock.CodeBlock -> Text(
             text = block.code,
-            style = style.codeBlock,
+            style = style.code.text,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(style.codeBlockBackground, style.codeBlockShape)
-                .padding(style.codeBlockPadding),
+                .background(style.code.background, style.code.shape)
+                .padding(style.code.padding),
         )
 
         is FhMdBlock.Image -> MarkdownImageNode(
@@ -186,8 +207,8 @@ private fun FhMdBlockNode(
         is FhMdBlock.ThematicBreak -> Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(style.thematicBreakThickness)
-                .background(style.thematicBreakColor),
+                .height(style.thematicBreak.thickness)
+                .background(style.thematicBreak.color),
         )
 
         is FhMdBlock.Table -> {
@@ -200,7 +221,7 @@ private fun FhMdBlockNode(
             Column(
                 modifier = Modifier
                     .horizontalScroll(rememberScrollState())
-                    .border(style.tableBorderWidth, style.tableBorderColor),
+                    .border(style.table.borderWidth, style.table.borderColor),
             ) {
                 TableRowNode(
                     cells = block.header,
@@ -265,14 +286,14 @@ private fun TableRowNode(
             val align = tableCellAlignment(cell?.alignment)
             Box(
                 modifier = Modifier
-                    .width(style.tableColumnWidth)
-                    .border(style.tableBorderWidth, style.tableBorderColor)
-                    .background(if (isHeader) style.tableHeaderBackground else Color.Transparent)
-                    .padding(style.tableCellPadding),
+                    .width(style.table.columnWidth)
+                    .border(style.table.borderWidth, style.table.borderColor)
+                    .background(if (isHeader) style.table.headerBackground else Color.Transparent)
+                    .padding(style.table.cellPadding),
             ) {
                 Text(
                     text = text,
-                    style = if (isHeader) style.tableHeaderText else style.tableText,
+                    style = if (isHeader) style.table.headerText else style.table.text,
                     textAlign = align,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -292,7 +313,7 @@ private fun MarkdownImageNode(
     if (safeSource == null) {
         Text(
             text = imageBlockFallbackText(block),
-            style = style.paragraph,
+            style = style.typography.paragraph,
         )
         return
     }
@@ -300,12 +321,12 @@ private fun MarkdownImageNode(
     AsyncImage(
         model = safeSource,
         contentDescription = block.alt,
-        contentScale = style.imageContentScale,
+        contentScale = style.image.contentScale,
         modifier = Modifier
             .fillMaxWidth()
-            .heightIn(max = style.imageMaxHeight)
-            .clip(style.imageShape)
-            .background(style.imageBackground),
+            .heightIn(max = style.image.maxHeight)
+            .clip(style.image.shape)
+            .background(style.image.background),
     )
 }
 

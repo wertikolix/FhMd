@@ -57,7 +57,7 @@ private fun AnnotatedString.Builder.appendInline(
             )
         }
 
-        is FhMdInline.Strikethrough -> withStyle(style = style.strikethroughStyle) {
+        is FhMdInline.Strikethrough -> withStyle(style = style.inline.strikethrough) {
             appendInlines(
                 inlines = inline.content,
                 style = style,
@@ -65,7 +65,7 @@ private fun AnnotatedString.Builder.appendInline(
             )
         }
 
-        is FhMdInline.InlineCode -> withStyle(style = style.inlineCode) {
+        is FhMdInline.InlineCode -> withStyle(style = style.inline.inlineCode) {
             append(inline.code)
         }
 
@@ -79,7 +79,7 @@ private fun AnnotatedString.Builder.appendInline(
             withLink(
                 LinkAnnotation.Url(
                     url = inline.destination,
-                    styles = TextLinkStyles(style = style.linkStyle),
+                    styles = TextLinkStyles(style = style.inline.link),
                     linkInteractionListener = LinkInteractionListener { annotation ->
                         val target = (annotation as? LinkAnnotation.Url)?.url ?: inline.destination
                         onLinkClick(target)
