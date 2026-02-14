@@ -48,15 +48,15 @@ jobs:
             "build-tools;36.0.0"
 
       - name: Build tests and release artifacts
-        run: ./gradlew --no-daemon --build-cache :fhmd-core:test :fhmd-compose-android:testDebugUnitTest :fhmd-compose-android:assembleRelease :fhmd-core:jar :sample-app:assembleRelease :sample-app:bundleRelease
+        run: ./gradlew --no-daemon --build-cache :orca-core:test :orca-compose-android:testDebugUnitTest :orca-compose-android:assembleRelease :orca-core:jar :sample-app:assembleRelease :sample-app:bundleRelease
 
       - name: Upload release artifacts to workflow
         uses: actions/upload-artifact@v4
         with:
           name: release-artifacts-${{ github.ref_name }}
           path: |
-            fhmd-compose-android/build/outputs/aar/fhmd-compose-android-release.aar
-            fhmd-core/build/libs/fhmd-core*.jar
+            orca-compose-android/build/outputs/aar/orca-compose-android-release.aar
+            orca-core/build/libs/orca-core*.jar
             sample-app/build/outputs/apk/release/*.apk
             sample-app/build/outputs/bundle/release/*.aab
             sample-app/build/outputs/apk/release/output-metadata.json
@@ -92,17 +92,17 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           assets=()
 
-          if [[ -f fhmd-compose-android/build/outputs/aar/fhmd-compose-android-release.aar ]]; then
-            assets+=(fhmd-compose-android/build/outputs/aar/fhmd-compose-android-release.aar)
+          if [[ -f orca-compose-android/build/outputs/aar/orca-compose-android-release.aar ]]; then
+            assets+=(orca-compose-android/build/outputs/aar/orca-compose-android-release.aar)
           fi
 
-          core_jar_files=(fhmd-core/build/libs/fhmd-core*.jar)
+          core_jar_files=(orca-core/build/libs/orca-core*.jar)
           for jar in "${core_jar_files[@]}"; do
             [[ -e "$jar" ]] || continue
             if [[ "$jar" == *-sources.jar || "$jar" == *-javadoc.jar ]]; then
               continue
             fi
-            assets+=("$jar#fhmd-core.jar")
+            assets+=("$jar#orca-core.jar")
             break
           done
 
@@ -129,8 +129,8 @@ jobs:
         with:
           name: release-failure-reports-${{ github.run_id }}
           path: |
-            fhmd-core/build/reports/
-            fhmd-compose-android/build/reports/
+            orca-core/build/reports/
+            orca-compose-android/build/reports/
             sample-app/build/reports/
             sample-app/build/outputs/logs/
             build/reports/problems/

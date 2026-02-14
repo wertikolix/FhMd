@@ -48,7 +48,7 @@ jobs:
             "build-tools;36.0.0"
 
       - name: Build and test
-        run: ./gradlew --no-daemon --build-cache :fhmd-core:test :fhmd-compose-android:testDebugUnitTest :sample-app:assembleDebug
+        run: ./gradlew --no-daemon --build-cache :orca-core:test :orca-compose-android:testDebugUnitTest :sample-app:assembleDebug
 
       - name: Upload reports on failure
         if: failure()
@@ -56,8 +56,8 @@ jobs:
         with:
           name: ci-failure-reports-${{ github.run_id }}
           path: |
-            fhmd-core/build/reports/
-            fhmd-compose-android/build/reports/
+            orca-core/build/reports/
+            orca-compose-android/build/reports/
             sample-app/build/reports/
             sample-app/build/outputs/logs/
             build/reports/problems/

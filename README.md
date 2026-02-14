@@ -1,8 +1,8 @@
-# FhMd
+# Orca
 
 Markdown renderer for Compose (Android-first, multiplatform-ready).
 
-[![CI](https://github.com/wertikolix/FhMd/actions/workflows/ci.yml/badge.svg)](https://github.com/wertikolix/FhMd/actions/workflows/ci.yml)
+[![CI](https://github.com/wertikolix/Orca/actions/workflows/ci.yml/badge.svg)](https://github.com/wertikolix/Orca/actions/workflows/ci.yml)
 
 ## Status
 
@@ -19,15 +19,14 @@ Next draft notes: [`0.1.0-alpha08`](docs/releases/0.1.0-alpha08.md).
 
 ## Modules
 
-- `fhmd-core`: AST model + parser API + `commonmark-java` mapping
-- `fhmd-compose-android`: Compose renderer for `FhMdDocument`
+- `orca-core`: AST model + parser API + `commonmark-java` mapping
+- `orca-compose-android`: Compose renderer for `OrcaDocument`
 - `sample-app`: Android sample for manual verification
 
 ## Maven Coordinates
 
-- `ru.wertik:fhmd-core:<version>`
-- `ru.wertik:fhmd-compose-android:<version>` (current published coordinate)
-- `ru.wertik:fhmd-compose:<version>` (short alias configured in publishing from `0.1.0-alpha07`)
+- `ru.wertik:orca-core:<version>`
+- `ru.wertik:orca-compose:<version>`
 
 ## Supported (`0.1.0-alpha08`)
 
@@ -37,7 +36,7 @@ Next draft notes: [`0.1.0-alpha08`](docs/releases/0.1.0-alpha08.md).
   - `commonmark-ext-gfm-strikethrough`
   - `commonmark-ext-task-list-items`
 - Public parser API:
-  - `interface FhMdParser { fun parse(input: String): FhMdDocument }`
+  - `interface OrcaParser { fun parse(input: String): OrcaDocument }`
 - Blocks:
   - heading
   - paragraph
@@ -60,10 +59,10 @@ Next draft notes: [`0.1.0-alpha08`](docs/releases/0.1.0-alpha08.md).
   - ordered start number
   - task list items (`[x]` / `[ ]`)
 - Renderer:
-  - Compose renderer for `FhMdDocument`
+  - Compose renderer for `OrcaDocument`
   - root rendering via `LazyColumn` for long documents
   - markdown parsing off main thread (`Dispatchers.Default`)
-  - grouped style model (`FhMdStyle.typography`, `inline`, `layout`, `quote`, `code`, `table`, `thematicBreak`, `image`)
+  - grouped style model (`OrcaStyle.typography`, `inline`, `layout`, `quote`, `code`, `table`, `thematicBreak`, `image`)
   - compatibility accessors for v0.1 flat style fields remain available
   - link click callback: `onLinkClick: (String) -> Unit`
   - link safety filter (`http`, `https`, `mailto`)
@@ -79,17 +78,17 @@ Next draft notes: [`0.1.0-alpha08`](docs/releases/0.1.0-alpha08.md).
 ## Usage
 
 ```kotlin
-import ru.wertik.fhmd.core.CommonmarkFhMdParser
-import ru.wertik.fhmd.core.FhMdParser
+import ru.wertik.orca.core.CommonmarkOrcaParser
+import ru.wertik.orca.core.OrcaParser
 
-val parser: FhMdParser = CommonmarkFhMdParser()
+val parser: OrcaParser = CommonmarkOrcaParser()
 val document = parser.parse(markdown)
 ```
 
 ```kotlin
-import ru.wertik.fhmd.compose.android.FhMd
+import ru.wertik.orca.compose.android.Orca
 
-FhMd(
+Orca(
     markdown = markdown,
     onLinkClick = { link -> /* handle link */ },
 )
@@ -98,7 +97,7 @@ FhMd(
 ## Verification
 
 ```bash
-./gradlew :fhmd-core:test :fhmd-compose-android:testDebugUnitTest :sample-app:assembleDebug
+./gradlew :orca-core:test :orca-compose-android:testDebugUnitTest :sample-app:assembleDebug
 ```
 
 `sample-app` release APK is debug-signed for installation testing only.

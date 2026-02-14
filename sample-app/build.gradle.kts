@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "ru.wertik.fhmd.sample"
+    namespace = "ru.wertik.orca.sample"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "ru.wertik.fhmd.sample"
+        applicationId = "ru.wertik.orca.sample"
         minSdk = 24
         targetSdk = 36
         versionCode = 8
@@ -56,8 +56,8 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":fhmd-core"))
-    implementation(project(":fhmd-compose-android"))
+    implementation(project(":orca-core"))
+    implementation(project(":orca-compose-android"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.androidx.core.ktx)

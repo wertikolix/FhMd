@@ -14,10 +14,10 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FhMd"
+rootProject.name = "Orca"
 
 include(
-    ":fhmd-core",
-    ":fhmd-compose-android",
+    ":orca-core",
+    ":orca-compose-android",
     ":sample-app",
 )

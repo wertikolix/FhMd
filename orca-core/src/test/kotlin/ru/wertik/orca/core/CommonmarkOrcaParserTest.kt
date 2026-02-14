@@ -1,0 +1,418 @@
+package ru.wertik.orca.core
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class CommonmarkOrcaParserTest {
+
+    private val parser: OrcaParser = CommonmarkOrcaParser()
+
+    @Test
+    fun `parse heading and inline formatting`() {
+        val markdown = """
+            # Title
+            
+            This is **bold** and *italic* and ~~strike~~ and `code` and [link](https://example.com).
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        val expected = OrcaDocument(
+            blocks = listOf(
+                OrcaBlock.Heading(
+                    level = 1,
+                    content = listOf(OrcaInline.Text("Title")),
+                ),
+                OrcaBlock.Paragraph(
+                    content = listOf(
+                        OrcaInline.Text("This is "),
+                        OrcaInline.Bold(content = listOf(OrcaInline.Text("bold"))),
+                        OrcaInline.Text(" and "),
+                        OrcaInline.Italic(content = listOf(OrcaInline.Text("italic"))),
+                        OrcaInline.Text(" and "),
+                        OrcaInline.Strikethrough(content = listOf(OrcaInline.Text("strike"))),
+                        OrcaInline.Text(" and "),
+                        OrcaInline.InlineCode(code = "code"),
+                        OrcaInline.Text(" and "),
+                        OrcaInline.Link(
+                            destination = "https://example.com",
+                            content = listOf(OrcaInline.Text("link")),
+                        ),
+                        OrcaInline.Text("."),
+                    ),
+                ),
+            ),
+        )
+
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `parse quote list and code block`() {
+        val markdown = """
+            > quoted **text**
+            
+            - item one
+            - item two
+            
+            ```kotlin
+            println("hi")
+            ```
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        val expected = OrcaDocument(
+            blocks = listOf(
+                OrcaBlock.Quote(
+                    blocks = listOf(
+                        OrcaBlock.Paragraph(
+                            content = listOf(
+                                OrcaInline.Text("quoted "),
+                                OrcaInline.Bold(content = listOf(OrcaInline.Text("text"))),
+                            ),
+                        ),
+                    ),
+                ),
+                OrcaBlock.ListBlock(
+                    ordered = false,
+                    items = listOf(
+                        OrcaListItem(
+                            blocks = listOf(
+                                OrcaBlock.Paragraph(content = listOf(OrcaInline.Text("item one"))),
+                            ),
+                        ),
+                        OrcaListItem(
+                            blocks = listOf(
+                                OrcaBlock.Paragraph(content = listOf(OrcaInline.Text("item two"))),
+                            ),
+                        ),
+                    ),
+                ),
+                OrcaBlock.CodeBlock(
+                    code = "println(\"hi\")",
+                    language = "kotlin",
+                ),
+            ),
+        )
+
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `parse ordered list and inline line breaks`() {
+        val markdown = """
+            1. first
+            2. second
+            
+            line one
+            line two
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        val expected = OrcaDocument(
+            blocks = listOf(
+                OrcaBlock.ListBlock(
+                    ordered = true,
+                    items = listOf(
+                        OrcaListItem(
+                            blocks = listOf(
+                                OrcaBlock.Paragraph(content = listOf(OrcaInline.Text("first"))),
+                            ),
+                        ),
+                        OrcaListItem(
+                            blocks = listOf(
+                                OrcaBlock.Paragraph(content = listOf(OrcaInline.Text("second"))),
+                            ),
+                        ),
+                    ),
+                ),
+                OrcaBlock.Paragraph(
+                    content = listOf(
+                        OrcaInline.Text("line one"),
+                        OrcaInline.Text("\n"),
+                        OrcaInline.Text("line two"),
+                    ),
+                ),
+            ),
+        )
+
+        assertEquals(expected, result)
+    }
+
+    @Test
+    fun `parse ordered list preserves start number`() {
+        val markdown = """
+            5. first
+            6. second
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+        val list = result.blocks.single() as OrcaBlock.ListBlock
+
+        assertEquals(true, list.ordered)
+        assertEquals(5, list.startNumber)
+        assertEquals(2, list.items.size)
+    }
+
+    @Test
+    fun `parse task list items with checked state`() {
+        val markdown = """
+            - [x] done
+            - [ ] todo
+            - plain
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+        val list = result.blocks.single() as OrcaBlock.ListBlock
+
+        assertEquals(false, list.ordered)
+        assertEquals(3, list.items.size)
+        assertEquals(OrcaTaskState.CHECKED, list.items[0].taskState)
+        assertEquals(OrcaTaskState.UNCHECKED, list.items[1].taskState)
+        assertEquals(null, list.items[2].taskState)
+        assertEquals(
+            OrcaBlock.Paragraph(content = listOf(OrcaInline.Text("done"))),
+            list.items[0].blocks.single(),
+        )
+    }
+
+    @Test
+    fun `parse empty input produces empty document`() {
+        val result = parser.parse("")
+        assertTrue(result.blocks.isEmpty())
+    }
+
+    @Test
+    fun `parse fenced code info keeps only first language token`() {
+        val markdown = """
+            ```kotlin linenums
+            val x = 1
+            ```
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        val code = result.blocks.single() as OrcaBlock.CodeBlock
+        assertEquals("kotlin", code.language)
+        assertEquals("val x = 1", code.code)
+    }
+
+    @Test
+    fun `parse fenced code without info has null language`() {
+        val markdown = """
+            ```
+            plain
+            ```
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+        val code = result.blocks.single() as OrcaBlock.CodeBlock
+
+        assertNull(code.language)
+        assertEquals("plain", code.code)
+    }
+
+    @Test
+    fun `parse hard line break maps to newline inline`() {
+        val markdown = "line one  \nline two"
+        val result = parser.parse(markdown)
+        val paragraph = result.blocks.single() as OrcaBlock.Paragraph
+
+        assertEquals(
+            listOf(
+                OrcaInline.Text("line one"),
+                OrcaInline.Text("\n"),
+                OrcaInline.Text("line two"),
+            ),
+            paragraph.content,
+        )
+    }
+
+    @Test
+    fun `parse nested list inside quote preserves hierarchy`() {
+        val markdown = """
+            > - first
+            > - second
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+        val quote = result.blocks.single() as OrcaBlock.Quote
+        val list = quote.blocks.single() as OrcaBlock.ListBlock
+
+        assertEquals(false, list.ordered)
+        assertEquals(2, list.items.size)
+        assertEquals(
+            OrcaBlock.Paragraph(content = listOf(OrcaInline.Text("first"))),
+            list.items[0].blocks.single(),
+        )
+        assertEquals(
+            OrcaBlock.Paragraph(content = listOf(OrcaInline.Text("second"))),
+            list.items[1].blocks.single(),
+        )
+    }
+
+    @Test
+    fun `very deep nesting does not crash mapper`() {
+        val markdown = buildString {
+            repeat(400) { append("> ") }
+            append("deep")
+        }
+
+        val result = parser.parse(markdown)
+
+        assertTrue(result.blocks.isNotEmpty())
+    }
+
+    @Test
+    fun `parse thematic break between paragraphs`() {
+        val markdown = """
+            top
+            
+            ---
+            
+            bottom
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+
+        assertEquals(3, result.blocks.size)
+        assertEquals(
+            OrcaBlock.Paragraph(content = listOf(OrcaInline.Text("top"))),
+            result.blocks[0],
+        )
+        assertEquals(
+            OrcaBlock.ThematicBreak,
+            result.blocks[1],
+        )
+        assertEquals(
+            OrcaBlock.Paragraph(content = listOf(OrcaInline.Text("bottom"))),
+            result.blocks[2],
+        )
+    }
+
+    @Test
+    fun `parse standalone image paragraph as image block`() {
+        val markdown = "![alt text](https://example.com/img.png \"logo\")"
+
+        val result = parser.parse(markdown)
+
+        assertEquals(
+            listOf(
+                OrcaBlock.Image(
+                    source = "https://example.com/img.png",
+                    alt = "alt text",
+                    title = "logo",
+                ),
+            ),
+            result.blocks,
+        )
+    }
+
+    @Test
+    fun `parse inline image in paragraph`() {
+        val markdown = "before ![icon](https://example.com/icon.png) after"
+        val result = parser.parse(markdown)
+        val paragraph = result.blocks.single() as OrcaBlock.Paragraph
+
+        assertEquals(
+            listOf(
+                OrcaInline.Text("before "),
+                OrcaInline.Image(
+                    source = "https://example.com/icon.png",
+                    alt = "icon",
+                    title = null,
+                ),
+                OrcaInline.Text(" after"),
+            ),
+            paragraph.content,
+        )
+    }
+
+    @Test
+    fun `parse gfm table with header body and alignment`() {
+        val markdown = """
+            | left | center | right |
+            |:-----|:------:|------:|
+            | a    | b      | c     |
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+        val table = result.blocks.single() as OrcaBlock.Table
+
+        assertEquals(
+            listOf(
+                OrcaTableCell(
+                    content = listOf(OrcaInline.Text("left")),
+                    alignment = OrcaTableAlignment.LEFT,
+                ),
+                OrcaTableCell(
+                    content = listOf(OrcaInline.Text("center")),
+                    alignment = OrcaTableAlignment.CENTER,
+                ),
+                OrcaTableCell(
+                    content = listOf(OrcaInline.Text("right")),
+                    alignment = OrcaTableAlignment.RIGHT,
+                ),
+            ),
+            table.header,
+        )
+
+        assertEquals(
+            listOf(
+                listOf(
+                    OrcaTableCell(
+                        content = listOf(OrcaInline.Text("a")),
+                        alignment = OrcaTableAlignment.LEFT,
+                    ),
+                    OrcaTableCell(
+                        content = listOf(OrcaInline.Text("b")),
+                        alignment = OrcaTableAlignment.CENTER,
+                    ),
+                    OrcaTableCell(
+                        content = listOf(OrcaInline.Text("c")),
+                        alignment = OrcaTableAlignment.RIGHT,
+                    ),
+                ),
+            ),
+            table.rows,
+        )
+    }
+
+    @Test
+    fun `parse table cells with inline formatting`() {
+        val markdown = """
+            | feature | value |
+            |:--------|:------|
+            | **bold** | [docs](https://example.com) |
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+        val table = result.blocks.single() as OrcaBlock.Table
+
+        assertEquals(
+            OrcaTableCell(
+                content = listOf(
+                    OrcaInline.Bold(content = listOf(OrcaInline.Text("bold"))),
+                ),
+                alignment = OrcaTableAlignment.LEFT,
+            ),
+            table.rows[0][0],
+        )
+        assertEquals(
+            OrcaTableCell(
+                content = listOf(
+                    OrcaInline.Link(
+                        destination = "https://example.com",
+                        content = listOf(OrcaInline.Text("docs")),
+                    ),
+                ),
+                alignment = OrcaTableAlignment.LEFT,
+            ),
+            table.rows[0][1],
+        )
+    }
+}

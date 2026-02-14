@@ -1,0 +1,98 @@
+package ru.wertik.orca.core
+
+data class OrcaDocument(
+    val blocks: List<OrcaBlock>,
+)
+
+sealed interface OrcaBlock {
+    data class Heading(
+        val level: Int,
+        val content: List<OrcaInline>,
+    ) : OrcaBlock
+
+    data class Paragraph(
+        val content: List<OrcaInline>,
+    ) : OrcaBlock
+
+    data class ListBlock(
+        val ordered: Boolean,
+        val items: List<OrcaListItem>,
+        val startNumber: Int = 1,
+    ) : OrcaBlock
+
+    data class Quote(
+        val blocks: List<OrcaBlock>,
+    ) : OrcaBlock
+
+    data class CodeBlock(
+        val code: String,
+        val language: String?,
+    ) : OrcaBlock
+
+    data class Image(
+        val source: String,
+        val alt: String?,
+        val title: String?,
+    ) : OrcaBlock
+
+    data object ThematicBreak : OrcaBlock
+
+    data class Table(
+        val header: List<OrcaTableCell>,
+        val rows: List<List<OrcaTableCell>>,
+    ) : OrcaBlock
+}
+
+data class OrcaListItem(
+    val blocks: List<OrcaBlock>,
+    val taskState: OrcaTaskState? = null,
+)
+
+enum class OrcaTaskState {
+    CHECKED,
+    UNCHECKED,
+}
+
+data class OrcaTableCell(
+    val content: List<OrcaInline>,
+    val alignment: OrcaTableAlignment?,
+)
+
+enum class OrcaTableAlignment {
+    LEFT,
+    CENTER,
+    RIGHT,
+}
+
+sealed interface OrcaInline {
+    data class Text(
+        val text: String,
+    ) : OrcaInline
+
+    data class Bold(
+        val content: List<OrcaInline>,
+    ) : OrcaInline
+
+    data class Italic(
+        val content: List<OrcaInline>,
+    ) : OrcaInline
+
+    data class Strikethrough(
+        val content: List<OrcaInline>,
+    ) : OrcaInline
+
+    data class InlineCode(
+        val code: String,
+    ) : OrcaInline
+
+    data class Link(
+        val destination: String,
+        val content: List<OrcaInline>,
+    ) : OrcaInline
+
+    data class Image(
+        val source: String,
+        val alt: String?,
+        val title: String?,
+    ) : OrcaInline
+}
