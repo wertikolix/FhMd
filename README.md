@@ -6,9 +6,9 @@ Markdown renderer for Compose (Android-first, multiplatform-ready).
 
 ## Status
 
-`0.1.0-alpha08` (in progress, early alpha, API may change).
+`0.1.0-alpha09` (in progress, early alpha, API may change).
 
-Next draft notes: [`0.1.0-alpha08`](docs/releases/0.1.0-alpha08.md).
+Next draft notes: [`0.1.0-alpha09`](docs/releases/0.1.0-alpha09.md).
 
 ## Goals
 
@@ -28,7 +28,7 @@ Next draft notes: [`0.1.0-alpha08`](docs/releases/0.1.0-alpha08.md).
 - `ru.wertik:orca-core:<version>`
 - `ru.wertik:orca-compose:<version>`
 
-## Supported (`0.1.0-alpha08`)
+## Supported (`0.1.0-alpha09`)
 
 - Parser: `commonmark-java` (`0.27.1`)
 - Extensions:
