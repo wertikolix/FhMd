@@ -2,9 +2,13 @@
 
 Markdown renderer for Compose (Android-first, multiplatform-ready).
 
+[![CI](https://github.com/wertikolix/FhMd/actions/workflows/ci.yml/badge.svg)](https://github.com/wertikolix/FhMd/actions/workflows/ci.yml)
+
 ## Status
 
 `0.1.0-alpha01` (early alpha, API may change).
+
+Next draft notes: [`0.1.0-alpha02`](docs/releases/0.1.0-alpha02.md).
 
 ## Goals
 
