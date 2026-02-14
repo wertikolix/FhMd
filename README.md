@@ -2,12 +2,12 @@
 
 Android-first Markdown renderer for Jetpack Compose with architecture prepared for future Compose Multiplatform split.
 
-[![CI](https://github.com/wertikolix/Orca/actions/workflows/ci.yml/badge.svg)](https://github.com/wertikolix/Orca/actions/workflows/ci.yml)
+[![CI](https://github.com/wertikolix/Orca/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wertikolix/Orca/actions/workflows/ci.yml?query=branch%3Amain)
 
 ## Status
 
-- Current stable minor: `0.2.3`
-- Release notes: [`docs/releases/0.2.3.md`](docs/releases/0.2.3.md)
+- Current stable minor: `0.2.4`
+- Release notes: [`docs/releases/0.2.4.md`](docs/releases/0.2.4.md)
 - Maturity: lightweight production-ready core subset (Markdown-first)
 
 ## Why Orca
@@ -94,7 +94,7 @@ CommonmarkOrcaParser(
 )
 ```
 
-## Supported Syntax (`0.2.3`)
+## Supported Syntax (`0.2.4`)
 
 ### Blocks
 
@@ -205,7 +205,7 @@ For release-like check:
 
 ## Versioning
 
-- Stable releases use plain semver tags like `0.2.3`, `0.3.0`
+- Stable releases use plain semver tags like `0.2.4`, `0.3.0`
 - Pre-releases use `-alpha`, `-beta`, `-rc`
 - Maven Central artifacts are immutable after publish
 
