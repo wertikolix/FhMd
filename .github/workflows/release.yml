@@ -56,7 +56,7 @@ jobs:
           name: release-artifacts-${{ github.ref_name }}
           path: |
             fhmd-compose-android/build/outputs/aar/fhmd-compose-android-release.aar
-            fhmd-core/build/libs/fhmd-core.jar
+            fhmd-core/build/libs/fhmd-core*.jar
             sample-app/build/outputs/apk/release/*.apk
             sample-app/build/outputs/bundle/release/*.aab
             sample-app/build/outputs/apk/release/output-metadata.json
@@ -96,9 +96,15 @@ jobs:
             assets+=(fhmd-compose-android/build/outputs/aar/fhmd-compose-android-release.aar)
           fi
 
-          if [[ -f fhmd-core/build/libs/fhmd-core.jar ]]; then
-            assets+=(fhmd-core/build/libs/fhmd-core.jar)
-          fi
+          core_jar_files=(fhmd-core/build/libs/fhmd-core*.jar)
+          for jar in "${core_jar_files[@]}"; do
+            [[ -e "$jar" ]] || continue
+            if [[ "$jar" == *-sources.jar || "$jar" == *-javadoc.jar ]]; then
+              continue
+            fi
+            assets+=("$jar#fhmd-core.jar")
+            break
+          done
 
           apk_files=(sample-app/build/outputs/apk/release/*.apk)
           if [[ -e "${apk_files[0]}" ]]; then
