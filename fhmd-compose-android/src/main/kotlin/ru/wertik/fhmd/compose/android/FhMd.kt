@@ -44,8 +44,8 @@ fun FhMd(
     style: FhMdStyle = defaultStyle,
     onLinkClick: (String) -> Unit = noOpLinkClick,
 ) {
-    val parserType = parser::class
-    val document = remember(markdown, parserType) {
+    val parserKey = parser.cacheKey()
+    val document = remember(markdown, parserKey) {
         parser.parse(markdown)
     }
     FhMd(

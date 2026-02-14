@@ -233,7 +233,7 @@ class CommonmarkFhMdParser(
     }
 }
 
-private const val MAX_TREE_DEPTH = 256
+private const val MAX_TREE_DEPTH = 64
 
 private fun Node.childSequence(): Sequence<Node> = sequence {
     var child = firstChild

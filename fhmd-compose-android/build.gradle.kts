@@ -77,8 +77,8 @@ val releaseJavadocJar by tasks.registering(Jar::class) {
 
 publishing {
     publications {
-        register<MavenPublication>("release") {
-            artifactId = "fhmd-compose-android"
+        fun MavenPublication.configureComposePublication(artifactName: String) {
+            artifactId = artifactName
 
             afterEvaluate {
                 from(components["release"])
@@ -108,6 +108,14 @@ publishing {
                     url.set("https://github.com/wertikolix/FhMd")
                 }
             }
+        }
+
+        register<MavenPublication>("release") {
+            configureComposePublication(artifactName = "fhmd-compose-android")
+        }
+
+        register<MavenPublication>("releaseShort") {
+            configureComposePublication(artifactName = "fhmd-compose")
         }
     }
 

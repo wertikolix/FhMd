@@ -23,6 +23,12 @@ Next draft notes: [`0.1.0-alpha06`](docs/releases/0.1.0-alpha06.md).
 - `fhmd-compose-android`: Compose renderer for `FhMdDocument`
 - `sample-app`: Android sample for manual verification
 
+## Maven Coordinates
+
+- `ru.wertik:fhmd-core:<version>`
+- `ru.wertik:fhmd-compose-android:<version>` (current published coordinate)
+- `ru.wertik:fhmd-compose:<version>` (short alias planned for next alpha)
+
 ## Supported (`0.1.0-alpha06`)
 
 - Parser: `commonmark-java` (`0.27.1`)
