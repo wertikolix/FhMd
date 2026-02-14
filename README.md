@@ -4,7 +4,7 @@ Markdown renderer for Compose (Android-first, multiplatform-ready).
 
 ## Status
 
-Early development. Not production-ready yet.
+`0.1.0-alpha01` (early alpha, API may change).
 
 ## Goals
 
@@ -15,19 +15,64 @@ Early development. Not production-ready yet.
 
 ## Modules
 
-- `fhmd-core` (planned): parser and rendering model
-- `fhmd-compose-android` (planned): Compose Android renderer
+- `fhmd-core`: AST model + parser API + `commonmark-java` mapping
+- `fhmd-compose-android`: Compose renderer for `FhMdDocument`
+- `sample-app`: Android sample for manual verification
 
-## Scope (v0.1)
+## Supported (`0.1.0-alpha01`)
 
-- [ ] Headings, paragraphs, lists, quotes, code blocks
-- [ ] Bold, italic, inline code, links
-- [ ] Default Compose styling
-- [ ] Custom mapping/theme hooks
+- Parser: `commonmark-java` (`0.27.1`)
+- Public parser API:
+  - `interface FhMdParser { fun parse(input: String): FhMdDocument }`
+- Blocks:
+  - heading
+  - paragraph
+  - bullet/ordered list
+  - quote
+  - fenced/indented code block
+- Inlines:
+  - text
+  - bold
+  - italic
+  - inline code
+  - link
+  - soft/hard line breaks (mapped to `\n`)
+- Renderer:
+  - Compose renderer for `FhMdDocument`
+  - basic default styles (`FhMdStyle`)
+  - link click callback: `onLinkClick: (String) -> Unit`
+
+## Not Supported Yet
+
+- Tables
+- Images
+- HTML blocks/inline HTML
+- Strikethrough
+- Task lists
+- Thematic breaks (`---`)
+- Footnotes/front matter/syntax extensions
+- Rich theming system (beyond basic style object)
+- Compose Multiplatform targets (architecture is prepared, Android module implemented first)
 
 ## Usage
 
-TBD (API is not stable yet).
+```kotlin
+val parser: FhMdParser = CommonmarkFhMdParser()
+val document = parser.parse(markdown)
+```
+
+```kotlin
+FhMd(
+    markdown = markdown,
+    onLinkClick = { link -> /* handle link */ },
+)
+```
+
+## Verification
+
+```bash
+./gradlew :fhmd-core:test :fhmd-compose-android:testDebugUnitTest :sample-app:assembleDebug
+```
 
 ## Contributing
 
