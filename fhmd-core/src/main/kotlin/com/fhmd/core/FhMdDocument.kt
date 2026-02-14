@@ -27,11 +27,27 @@ sealed interface FhMdBlock {
         val code: String,
         val language: String?,
     ) : FhMdBlock
+
+    data class Table(
+        val header: List<FhMdTableCell>,
+        val rows: List<List<FhMdTableCell>>,
+    ) : FhMdBlock
 }
 
 data class FhMdListItem(
     val blocks: List<FhMdBlock>,
 )
+
+data class FhMdTableCell(
+    val content: List<FhMdInline>,
+    val alignment: FhMdTableAlignment?,
+)
+
+enum class FhMdTableAlignment {
+    LEFT,
+    CENTER,
+    RIGHT,
+}
 
 sealed interface FhMdInline {
     data class Text(

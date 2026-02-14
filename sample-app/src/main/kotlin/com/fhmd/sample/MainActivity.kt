@@ -29,6 +29,12 @@ class MainActivity : ComponentActivity() {
         - first bullet
         - second bullet
         - third bullet
+
+        ## Table
+        | module | status | docs |
+        |:-------|:------:|-----:|
+        | **core** | ready | [api](https://github.com/commonmark/commonmark-java) |
+        | compose | ready | `android` |
         
         ## Quote
         > Keep architecture simple and stable first.

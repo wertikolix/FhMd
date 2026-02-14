@@ -46,6 +46,13 @@ data class FhMdStyle(
     val codeBlockBackground: Color = Color(0xFFF3F3F3),
     val codeBlockShape: Shape = RoundedCornerShape(8.dp),
     val codeBlockPadding: PaddingValues = PaddingValues(12.dp),
+    val tableText: TextStyle = TextStyle(fontSize = 14.sp, lineHeight = 20.sp),
+    val tableHeaderText: TextStyle = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold),
+    val tableColumnWidth: Dp = 160.dp,
+    val tableCellPadding: PaddingValues = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+    val tableBorderColor: Color = Color(0xFFD0D7DE),
+    val tableBorderWidth: Dp = 1.dp,
+    val tableHeaderBackground: Color = Color(0xFFF7F9FB),
 ) {
     fun heading(level: Int): TextStyle {
         return when (level.coerceIn(1, 6)) {

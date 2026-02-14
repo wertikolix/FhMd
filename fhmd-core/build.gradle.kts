@@ -8,6 +8,7 @@ kotlin {
 
 dependencies {
     implementation(libs.commonmark)
+    implementation(libs.commonmark.ext.gfm.tables)
 
     testImplementation(kotlin("test-junit"))
     testImplementation(libs.junit4)

@@ -238,4 +238,88 @@ class CommonmarkFhMdParserTest {
             result.blocks[1],
         )
     }
+
+    @Test
+    fun `parse gfm table with header body and alignment`() {
+        val markdown = """
+            | left | center | right |
+            |:-----|:------:|------:|
+            | a    | b      | c     |
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+        val table = result.blocks.single() as FhMdBlock.Table
+
+        assertEquals(
+            listOf(
+                FhMdTableCell(
+                    content = listOf(FhMdInline.Text("left")),
+                    alignment = FhMdTableAlignment.LEFT,
+                ),
+                FhMdTableCell(
+                    content = listOf(FhMdInline.Text("center")),
+                    alignment = FhMdTableAlignment.CENTER,
+                ),
+                FhMdTableCell(
+                    content = listOf(FhMdInline.Text("right")),
+                    alignment = FhMdTableAlignment.RIGHT,
+                ),
+            ),
+            table.header,
+        )
+
+        assertEquals(
+            listOf(
+                listOf(
+                    FhMdTableCell(
+                        content = listOf(FhMdInline.Text("a")),
+                        alignment = FhMdTableAlignment.LEFT,
+                    ),
+                    FhMdTableCell(
+                        content = listOf(FhMdInline.Text("b")),
+                        alignment = FhMdTableAlignment.CENTER,
+                    ),
+                    FhMdTableCell(
+                        content = listOf(FhMdInline.Text("c")),
+                        alignment = FhMdTableAlignment.RIGHT,
+                    ),
+                ),
+            ),
+            table.rows,
+        )
+    }
+
+    @Test
+    fun `parse table cells with inline formatting`() {
+        val markdown = """
+            | feature | value |
+            |:--------|:------|
+            | **bold** | [docs](https://example.com) |
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+        val table = result.blocks.single() as FhMdBlock.Table
+
+        assertEquals(
+            FhMdTableCell(
+                content = listOf(
+                    FhMdInline.Bold(content = listOf(FhMdInline.Text("bold"))),
+                ),
+                alignment = FhMdTableAlignment.LEFT,
+            ),
+            table.rows[0][0],
+        )
+        assertEquals(
+            FhMdTableCell(
+                content = listOf(
+                    FhMdInline.Link(
+                        destination = "https://example.com",
+                        content = listOf(FhMdInline.Text("docs")),
+                    ),
+                ),
+                alignment = FhMdTableAlignment.LEFT,
+            ),
+            table.rows[0][1],
+        )
+    }
 }

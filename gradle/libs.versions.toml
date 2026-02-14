@@ -11,6 +11,7 @@ espresso-core = "3.7.0"
 
 [libraries]
 commonmark = { module = "org.commonmark:commonmark", version.ref = "commonmark" }
+commonmark-ext-gfm-tables = { module = "org.commonmark:commonmark-ext-gfm-tables", version.ref = "commonmark" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }

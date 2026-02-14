@@ -3,9 +3,11 @@ package com.fhmd.compose.android
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import com.fhmd.core.CommonmarkFhMdParser
 import com.fhmd.core.FhMdBlock
 import com.fhmd.core.FhMdInline
+import com.fhmd.core.FhMdTableAlignment
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -181,5 +183,36 @@ class FhMdInlineTextTest {
         assertNotNull(
             rendered.spanStyles.firstOrNull { it.item.fontFamily == FhMdStyle().inlineCode.fontFamily },
         )
+    }
+
+    @Test
+    fun `table cell alignment mapping covers all variants`() {
+        assertEquals(TextAlign.Start, tableCellAlignment(FhMdTableAlignment.LEFT))
+        assertEquals(TextAlign.Center, tableCellAlignment(FhMdTableAlignment.CENTER))
+        assertEquals(TextAlign.End, tableCellAlignment(FhMdTableAlignment.RIGHT))
+        assertEquals(TextAlign.Start, tableCellAlignment(null))
+    }
+
+    @Test
+    fun `parser to table render integration keeps table cell inline formatting`() {
+        val parser = CommonmarkFhMdParser()
+        val document = parser.parse(
+            """
+            | feature |
+            |:--------|
+            | **bold** [docs](https://example.com) |
+            """.trimIndent(),
+        )
+        val table = document.blocks.single() as FhMdBlock.Table
+
+        val rendered = buildInlineAnnotatedString(
+            inlines = table.rows[0][0].content,
+            style = FhMdStyle(),
+            onLinkClick = {},
+        )
+
+        assertEquals("bold docs", rendered.text)
+        assertEquals(1, rendered.getLinkAnnotations(0, rendered.length).size)
+        assertTrue(rendered.spanStyles.any { it.item.fontWeight == FontWeight.Bold })
     }
 }

@@ -1,5 +1,12 @@
 package com.fhmd.core
 
+import org.commonmark.Extension
+import org.commonmark.ext.gfm.tables.TableBlock
+import org.commonmark.ext.gfm.tables.TableBody
+import org.commonmark.ext.gfm.tables.TableCell
+import org.commonmark.ext.gfm.tables.TableHead
+import org.commonmark.ext.gfm.tables.TableRow
+import org.commonmark.ext.gfm.tables.TablesExtension
 import org.commonmark.node.Block
 import org.commonmark.node.BlockQuote
 import org.commonmark.node.BulletList
@@ -20,7 +27,7 @@ import org.commonmark.node.Text
 import org.commonmark.parser.Parser
 
 class CommonmarkFhMdParser(
-    private val parser: Parser = Parser.builder().build(),
+    private val parser: Parser = defaultParser(),
 ) : FhMdParser {
 
     override fun parse(input: String): FhMdDocument {
@@ -73,8 +80,54 @@ class CommonmarkFhMdParser(
                 language = null,
             )
 
+            is TableBlock -> mapTable(node)
+
             else -> null
         }
+    }
+
+    private fun mapTable(tableBlock: TableBlock): FhMdBlock.Table? {
+        val header = tableBlock.childSequence()
+            .filterIsInstance<TableHead>()
+            .flatMap { tableHead ->
+                tableHead.childSequence()
+                    .filterIsInstance<TableRow>()
+            }
+            .firstOrNull()
+            ?.let(::mapTableRow)
+            .orEmpty()
+
+        val rows = tableBlock.childSequence()
+            .filterIsInstance<TableBody>()
+            .flatMap { body ->
+                body.childSequence()
+                    .filterIsInstance<TableRow>()
+                    .map(::mapTableRow)
+            }
+            .toList()
+
+        if (header.isEmpty() && rows.isEmpty()) {
+            return null
+        }
+
+        return FhMdBlock.Table(
+            header = header,
+            rows = rows,
+        )
+    }
+
+    private fun mapTableRow(tableRow: TableRow): List<FhMdTableCell> {
+        return tableRow.childSequence()
+            .filterIsInstance<TableCell>()
+            .map(::mapTableCell)
+            .toList()
+    }
+
+    private fun mapTableCell(tableCell: TableCell): FhMdTableCell {
+        return FhMdTableCell(
+            content = mapInlineContainer(tableCell),
+            alignment = tableCell.alignment.toFhMdAlignmentOrNull(),
+        )
     }
 
     private fun mapListItem(node: ListItem): FhMdListItem {
@@ -122,4 +175,22 @@ private fun Node.childSequence(): Sequence<Node> = sequence {
 private fun String.takeLanguageOrNull(): String? {
     val firstToken = trim().split(' ').firstOrNull()?.trim()
     return firstToken?.takeIf { it.isNotEmpty() }
+}
+
+private fun TableCell.Alignment?.toFhMdAlignmentOrNull(): FhMdTableAlignment? {
+    return when (this) {
+        TableCell.Alignment.LEFT -> FhMdTableAlignment.LEFT
+        TableCell.Alignment.CENTER -> FhMdTableAlignment.CENTER
+        TableCell.Alignment.RIGHT -> FhMdTableAlignment.RIGHT
+        null -> null
+    }
+}
+
+private fun defaultParser(): Parser {
+    val extensions: List<Extension> = listOf(
+        TablesExtension.create(),
+    )
+    return Parser.builder()
+        .extensions(extensions)
+        .build()
 }

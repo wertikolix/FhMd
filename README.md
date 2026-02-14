@@ -6,9 +6,9 @@ Markdown renderer for Compose (Android-first, multiplatform-ready).
 
 ## Status
 
-`0.1.0-alpha03` (in progress, early alpha, API may change).
+`0.1.0-alpha04` (in progress, early alpha, API may change).
 
-Next draft notes: [`0.1.0-alpha03`](docs/releases/0.1.0-alpha03.md).
+Next draft notes: [`0.1.0-alpha04`](docs/releases/0.1.0-alpha04.md).
 
 ## Goals
 
@@ -23,7 +23,7 @@ Next draft notes: [`0.1.0-alpha03`](docs/releases/0.1.0-alpha03.md).
 - `fhmd-compose-android`: Compose renderer for `FhMdDocument`
 - `sample-app`: Android sample for manual verification
 
-## Supported (`0.1.0-alpha03`)
+## Supported (`0.1.0-alpha04`)
 
 - Parser: `commonmark-java` (`0.27.1`)
 - Public parser API:
@@ -34,6 +34,7 @@ Next draft notes: [`0.1.0-alpha03`](docs/releases/0.1.0-alpha03.md).
   - bullet/ordered list
   - quote
   - fenced/indented code block
+  - tables (GFM pipe tables)
 - Inlines:
   - text
   - bold
@@ -48,7 +49,6 @@ Next draft notes: [`0.1.0-alpha03`](docs/releases/0.1.0-alpha03.md).
 
 ## Not Supported Yet
 
-- Tables
 - Images
 - HTML blocks/inline HTML
 - Strikethrough

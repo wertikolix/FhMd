@@ -1,6 +1,8 @@
 package com.fhmd.compose.android
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,12 +14,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import com.fhmd.core.CommonmarkFhMdParser
 import com.fhmd.core.FhMdBlock
 import com.fhmd.core.FhMdDocument
 import com.fhmd.core.FhMdParser
+import com.fhmd.core.FhMdTableAlignment
+import com.fhmd.core.FhMdTableCell
 
 @Composable
 fun FhMd(
@@ -142,6 +148,85 @@ private fun FhMdBlockNode(
                 .background(style.codeBlockBackground, style.codeBlockShape)
                 .padding(style.codeBlockPadding),
         )
+
+        is FhMdBlock.Table -> {
+            val columnCount = maxOf(
+                block.header.size,
+                block.rows.maxOfOrNull { row -> row.size } ?: 0,
+            )
+            if (columnCount == 0) return
+
+            Column(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .border(style.tableBorderWidth, style.tableBorderColor),
+            ) {
+                TableRowNode(
+                    cells = block.header,
+                    columnCount = columnCount,
+                    isHeader = true,
+                    style = style,
+                    onLinkClick = onLinkClick,
+                )
+                block.rows.forEach { row ->
+                    TableRowNode(
+                        cells = row,
+                        columnCount = columnCount,
+                        isHeader = false,
+                        style = style,
+                        onLinkClick = onLinkClick,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TableRowNode(
+    cells: List<FhMdTableCell>,
+    columnCount: Int,
+    isHeader: Boolean,
+    style: FhMdStyle,
+    onLinkClick: (String) -> Unit,
+) {
+    Row {
+        repeat(columnCount) { index ->
+            val cell = cells.getOrNull(index)
+            val text = if (cell == null) {
+                AnnotatedString("")
+            } else {
+                buildInlineAnnotatedString(
+                    inlines = cell.content,
+                    style = style,
+                    onLinkClick = onLinkClick,
+                )
+            }
+            val align = tableCellAlignment(cell?.alignment)
+            Box(
+                modifier = Modifier
+                    .width(style.tableColumnWidth)
+                    .border(style.tableBorderWidth, style.tableBorderColor)
+                    .background(if (isHeader) style.tableHeaderBackground else androidx.compose.ui.graphics.Color.Transparent)
+                    .padding(style.tableCellPadding),
+            ) {
+                Text(
+                    text = text,
+                    style = if (isHeader) style.tableHeaderText else style.tableText,
+                    textAlign = align,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+internal fun tableCellAlignment(alignment: FhMdTableAlignment?): TextAlign {
+    return when (alignment) {
+        FhMdTableAlignment.LEFT -> TextAlign.Start
+        FhMdTableAlignment.CENTER -> TextAlign.Center
+        FhMdTableAlignment.RIGHT -> TextAlign.End
+        null -> TextAlign.Start
     }
 }
 
