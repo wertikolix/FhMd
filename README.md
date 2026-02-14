@@ -78,6 +78,8 @@ FhMd(
 ./gradlew :fhmd-core:test :fhmd-compose-android:testDebugUnitTest :sample-app:assembleDebug
 ```
 
+`sample-app` release APK is debug-signed for installation testing only.
+
 ## Contributing
 
 Contributions are welcome.

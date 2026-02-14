@@ -48,15 +48,17 @@ jobs:
             "build-tools;36.0.0"
 
       - name: Build tests and release artifacts
-        run: ./gradlew --no-daemon --build-cache :fhmd-core:test :fhmd-compose-android:testDebugUnitTest :sample-app:assembleRelease :sample-app:bundleRelease
+        run: ./gradlew --no-daemon --build-cache :fhmd-core:test :fhmd-compose-android:testDebugUnitTest :fhmd-compose-android:assembleRelease :fhmd-core:jar :sample-app:assembleRelease :sample-app:bundleRelease
 
       - name: Upload release artifacts to workflow
         uses: actions/upload-artifact@v4
         with:
           name: release-artifacts-${{ github.ref_name }}
           path: |
-            sample-app/build/outputs/apk/release/sample-app-release-unsigned.apk
-            sample-app/build/outputs/bundle/release/sample-app-release.aab
+            fhmd-compose-android/build/outputs/aar/fhmd-compose-android-release.aar
+            fhmd-core/build/libs/fhmd-core.jar
+            sample-app/build/outputs/apk/release/*.apk
+            sample-app/build/outputs/bundle/release/*.aab
             sample-app/build/outputs/apk/release/output-metadata.json
           if-no-files-found: error
           retention-days: 14
@@ -90,12 +92,22 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           assets=()
 
-          if [[ -f sample-app/build/outputs/apk/release/sample-app-release-unsigned.apk ]]; then
-            assets+=(sample-app/build/outputs/apk/release/sample-app-release-unsigned.apk)
+          if [[ -f fhmd-compose-android/build/outputs/aar/fhmd-compose-android-release.aar ]]; then
+            assets+=(fhmd-compose-android/build/outputs/aar/fhmd-compose-android-release.aar)
           fi
 
-          if [[ -f sample-app/build/outputs/bundle/release/sample-app-release.aab ]]; then
-            assets+=(sample-app/build/outputs/bundle/release/sample-app-release.aab)
+          if [[ -f fhmd-core/build/libs/fhmd-core.jar ]]; then
+            assets+=(fhmd-core/build/libs/fhmd-core.jar)
+          fi
+
+          apk_files=(sample-app/build/outputs/apk/release/*.apk)
+          if [[ -e "${apk_files[0]}" ]]; then
+            assets+=("${apk_files[@]}")
+          fi
+
+          aab_files=(sample-app/build/outputs/bundle/release/*.aab)
+          if [[ -e "${aab_files[0]}" ]]; then
+            assets+=("${aab_files[@]}")
           fi
 
           if [[ ${#assets[@]} -eq 0 ]]; then
