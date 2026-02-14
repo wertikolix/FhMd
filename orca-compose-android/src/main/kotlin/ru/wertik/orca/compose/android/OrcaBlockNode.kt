@@ -322,15 +322,17 @@ private fun FootnotesNode(
                         )
                     }
 
-                    Text(
-                        text = "↩",
-                        style = style.inline.link.toTextStyle(style.typography.paragraph),
-                        modifier = Modifier
-                            .padding(top = 2.dp)
-                            .clickable {
-                                onFootnoteBackClick(definition.label)
-                            },
-                    )
+                    if (activeFootnoteLabel == definition.label) {
+                        Text(
+                            text = "↩",
+                            style = style.inline.link.toTextStyle(style.typography.paragraph),
+                            modifier = Modifier
+                                .padding(top = 2.dp)
+                                .clickable {
+                                    onFootnoteBackClick(definition.label)
+                                },
+                        )
+                    }
                 }
             }
         }
