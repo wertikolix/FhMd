@@ -7,15 +7,15 @@ plugins {
 }
 
 android {
-    namespace = "com.fhmd.sample"
+    namespace = "ru.wertik.fhmd.sample"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.fhmd.sample"
+        applicationId = "ru.wertik.fhmd.sample"
         minSdk = 24
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.1.0-alpha04"
+        versionCode = 5
+        versionName = "0.1.0-alpha05"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 

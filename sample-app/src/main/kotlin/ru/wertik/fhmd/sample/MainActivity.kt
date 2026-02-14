@@ -1,4 +1,4 @@
-package com.fhmd.sample
+package ru.wertik.fhmd.sample
 
 import android.os.Bundle
 import android.widget.Toast
@@ -13,7 +13,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.fhmd.compose.android.FhMd
+import ru.wertik.fhmd.compose.android.FhMd
 
 class MainActivity : ComponentActivity() {
 
@@ -35,6 +35,11 @@ class MainActivity : ComponentActivity() {
         |:-------|:------:|-----:|
         | **core** | ready | [api](https://github.com/commonmark/commonmark-java) |
         | compose | ready | `android` |
+
+        ## Image
+        ![markdown logo](https://raw.githubusercontent.com/github/explore/main/topics/markdown/markdown.png)
+
+        ---
         
         ## Quote
         > Keep architecture simple and stable first.

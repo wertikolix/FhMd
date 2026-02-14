@@ -1,4 +1,4 @@
-package com.fhmd.core
+package ru.wertik.fhmd.core
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -142,6 +142,21 @@ class CommonmarkFhMdParserTest {
     }
 
     @Test
+    fun `parse ordered list preserves start number`() {
+        val markdown = """
+            5. first
+            6. second
+        """.trimIndent()
+
+        val result = parser.parse(markdown)
+        val list = result.blocks.single() as FhMdBlock.ListBlock
+
+        assertEquals(true, list.ordered)
+        assertEquals(5, list.startNumber)
+        assertEquals(2, list.items.size)
+    }
+
+    @Test
     fun `parse empty input produces empty document`() {
         val result = parser.parse("")
         assertTrue(result.blocks.isEmpty())
@@ -217,7 +232,19 @@ class CommonmarkFhMdParserTest {
     }
 
     @Test
-    fun `unsupported thematic break is ignored while supported blocks remain`() {
+    fun `very deep nesting does not crash mapper`() {
+        val markdown = buildString {
+            repeat(400) { append("> ") }
+            append("deep")
+        }
+
+        val result = parser.parse(markdown)
+
+        assertTrue(result.blocks.isNotEmpty())
+    }
+
+    @Test
+    fun `parse thematic break between paragraphs`() {
         val markdown = """
             top
             
@@ -228,14 +255,56 @@ class CommonmarkFhMdParserTest {
 
         val result = parser.parse(markdown)
 
-        assertEquals(2, result.blocks.size)
+        assertEquals(3, result.blocks.size)
         assertEquals(
             FhMdBlock.Paragraph(content = listOf(FhMdInline.Text("top"))),
             result.blocks[0],
         )
         assertEquals(
-            FhMdBlock.Paragraph(content = listOf(FhMdInline.Text("bottom"))),
+            FhMdBlock.ThematicBreak,
             result.blocks[1],
+        )
+        assertEquals(
+            FhMdBlock.Paragraph(content = listOf(FhMdInline.Text("bottom"))),
+            result.blocks[2],
+        )
+    }
+
+    @Test
+    fun `parse standalone image paragraph as image block`() {
+        val markdown = "![alt text](https://example.com/img.png \"logo\")"
+
+        val result = parser.parse(markdown)
+
+        assertEquals(
+            listOf(
+                FhMdBlock.Image(
+                    source = "https://example.com/img.png",
+                    alt = "alt text",
+                    title = "logo",
+                ),
+            ),
+            result.blocks,
+        )
+    }
+
+    @Test
+    fun `parse inline image in paragraph`() {
+        val markdown = "before ![icon](https://example.com/icon.png) after"
+        val result = parser.parse(markdown)
+        val paragraph = result.blocks.single() as FhMdBlock.Paragraph
+
+        assertEquals(
+            listOf(
+                FhMdInline.Text("before "),
+                FhMdInline.Image(
+                    source = "https://example.com/icon.png",
+                    alt = "icon",
+                    title = null,
+                ),
+                FhMdInline.Text(" after"),
+            ),
+            paragraph.content,
         )
     }
 

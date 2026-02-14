@@ -1,4 +1,4 @@
-package com.fhmd.compose.android
+package ru.wertik.fhmd.compose.android
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -6,34 +6,45 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
-import com.fhmd.core.CommonmarkFhMdParser
-import com.fhmd.core.FhMdBlock
-import com.fhmd.core.FhMdDocument
-import com.fhmd.core.FhMdParser
-import com.fhmd.core.FhMdTableAlignment
-import com.fhmd.core.FhMdTableCell
+import coil3.compose.AsyncImage
+import ru.wertik.fhmd.core.CommonmarkFhMdParser
+import ru.wertik.fhmd.core.FhMdBlock
+import ru.wertik.fhmd.core.FhMdDocument
+import ru.wertik.fhmd.core.FhMdParser
+import ru.wertik.fhmd.core.FhMdTableAlignment
+import ru.wertik.fhmd.core.FhMdTableCell
+
+private val defaultParser: FhMdParser = CommonmarkFhMdParser()
+private val defaultStyle: FhMdStyle = FhMdStyle()
+private val noOpLinkClick: (String) -> Unit = {}
 
 @Composable
 fun FhMd(
     markdown: String,
     modifier: Modifier = Modifier,
-    parser: FhMdParser = remember { CommonmarkFhMdParser() },
-    style: FhMdStyle = FhMdStyle(),
-    onLinkClick: (String) -> Unit = {},
+    parser: FhMdParser = defaultParser,
+    style: FhMdStyle = defaultStyle,
+    onLinkClick: (String) -> Unit = noOpLinkClick,
 ) {
-    val document = remember(markdown, parser) {
+    val parserType = parser::class
+    val document = remember(markdown, parserType) {
         parser.parse(markdown)
     }
     FhMd(
@@ -48,8 +59,8 @@ fun FhMd(
 fun FhMd(
     document: FhMdDocument,
     modifier: Modifier = Modifier,
-    style: FhMdStyle = FhMdStyle(),
-    onLinkClick: (String) -> Unit = {},
+    style: FhMdStyle = defaultStyle,
+    onLinkClick: (String) -> Unit = noOpLinkClick,
 ) {
     Column(
         modifier = modifier,
@@ -72,30 +83,44 @@ private fun FhMdBlockNode(
     onLinkClick: (String) -> Unit,
 ) {
     when (block) {
-        is FhMdBlock.Heading -> InlineTextNode(
-            text = buildInlineAnnotatedString(
-                inlines = block.content,
-                style = style,
-                onLinkClick = onLinkClick,
-            ),
-            textStyle = style.heading(block.level),
-        )
+        is FhMdBlock.Heading -> {
+            val headingText = remember(block.content, style, onLinkClick) {
+                buildInlineAnnotatedString(
+                    inlines = block.content,
+                    style = style,
+                    onLinkClick = onLinkClick,
+                )
+            }
+            InlineTextNode(
+                text = headingText,
+                textStyle = style.heading(block.level),
+            )
+        }
 
-        is FhMdBlock.Paragraph -> InlineTextNode(
-            text = buildInlineAnnotatedString(
-                inlines = block.content,
-                style = style,
-                onLinkClick = onLinkClick,
-            ),
-            textStyle = style.paragraph,
-        )
+        is FhMdBlock.Paragraph -> {
+            val paragraphText = remember(block.content, style, onLinkClick) {
+                buildInlineAnnotatedString(
+                    inlines = block.content,
+                    style = style,
+                    onLinkClick = onLinkClick,
+                )
+            }
+            InlineTextNode(
+                text = paragraphText,
+                textStyle = style.paragraph,
+            )
+        }
 
         is FhMdBlock.ListBlock -> Column(
             verticalArrangement = Arrangement.spacedBy(style.nestedBlockSpacing),
         ) {
             block.items.forEachIndexed { index, item ->
                 Row {
-                    val marker = if (block.ordered) "${index + 1}." else "•"
+                    val marker = listMarkerText(
+                        ordered = block.ordered,
+                        startNumber = block.startNumber,
+                        index = index,
+                    )
                     Text(
                         text = marker,
                         style = style.paragraph,
@@ -117,7 +142,9 @@ private fun FhMdBlockNode(
             }
         }
 
-        is FhMdBlock.Quote -> Row {
+        is FhMdBlock.Quote -> Row(
+            modifier = Modifier.height(IntrinsicSize.Min),
+        ) {
             Box(
                 modifier = Modifier
                     .width(style.quoteStripeWidth)
@@ -147,6 +174,18 @@ private fun FhMdBlockNode(
                 .fillMaxWidth()
                 .background(style.codeBlockBackground, style.codeBlockShape)
                 .padding(style.codeBlockPadding),
+        )
+
+        is FhMdBlock.Image -> MarkdownImageNode(
+            block = block,
+            style = style,
+        )
+
+        is FhMdBlock.ThematicBreak -> Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(style.thematicBreakThickness)
+                .background(style.thematicBreakColor),
         )
 
         is FhMdBlock.Table -> {
@@ -182,6 +221,18 @@ private fun FhMdBlockNode(
     }
 }
 
+internal fun listMarkerText(
+    ordered: Boolean,
+    startNumber: Int,
+    index: Int,
+): String {
+    return if (ordered) {
+        "${startNumber + index}."
+    } else {
+        "•"
+    }
+}
+
 @Composable
 private fun TableRowNode(
     cells: List<FhMdTableCell>,
@@ -193,21 +244,23 @@ private fun TableRowNode(
     Row {
         repeat(columnCount) { index ->
             val cell = cells.getOrNull(index)
-            val text = if (cell == null) {
-                AnnotatedString("")
-            } else {
-                buildInlineAnnotatedString(
-                    inlines = cell.content,
-                    style = style,
-                    onLinkClick = onLinkClick,
-                )
+            val text = remember(cell, style, onLinkClick) {
+                if (cell == null) {
+                    AnnotatedString("")
+                } else {
+                    buildInlineAnnotatedString(
+                        inlines = cell.content,
+                        style = style,
+                        onLinkClick = onLinkClick,
+                    )
+                }
             }
             val align = tableCellAlignment(cell?.alignment)
             Box(
                 modifier = Modifier
                     .width(style.tableColumnWidth)
                     .border(style.tableBorderWidth, style.tableBorderColor)
-                    .background(if (isHeader) style.tableHeaderBackground else androidx.compose.ui.graphics.Color.Transparent)
+                    .background(if (isHeader) style.tableHeaderBackground else Color.Transparent)
                     .padding(style.tableCellPadding),
             ) {
                 Text(
@@ -219,6 +272,38 @@ private fun TableRowNode(
             }
         }
     }
+}
+
+@Composable
+private fun MarkdownImageNode(
+    block: FhMdBlock.Image,
+    style: FhMdStyle,
+) {
+    val safeSource = remember(block.source) {
+        block.source.takeIf(::isSafeImageSource)
+    }
+    if (safeSource == null) {
+        Text(
+            text = imageBlockFallbackText(block),
+            style = style.paragraph,
+        )
+        return
+    }
+
+    AsyncImage(
+        model = safeSource,
+        contentDescription = block.alt,
+        contentScale = style.imageContentScale,
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(max = style.imageMaxHeight)
+            .clip(style.imageShape)
+            .background(style.imageBackground),
+    )
+}
+
+private fun imageBlockFallbackText(block: FhMdBlock.Image): String {
+    return block.alt?.takeIf { it.isNotBlank() } ?: block.source
 }
 
 internal fun tableCellAlignment(alignment: FhMdTableAlignment?): TextAlign {

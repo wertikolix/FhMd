@@ -1,4 +1,4 @@
-package com.fhmd.compose.android
+package ru.wertik.fhmd.compose.android
 
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -7,7 +7,7 @@ import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
-import com.fhmd.core.FhMdInline
+import ru.wertik.fhmd.core.FhMdInline
 
 internal fun buildInlineAnnotatedString(
     inlines: List<FhMdInline>,
@@ -61,25 +61,51 @@ private fun AnnotatedString.Builder.appendInline(
             append(inline.code)
         }
 
-        is FhMdInline.Link -> withLink(
-            LinkAnnotation.Url(
-                url = inline.destination,
-                styles = TextLinkStyles(style = style.linkStyle),
-                linkInteractionListener = LinkInteractionListener { annotation ->
-                    val target = (annotation as? LinkAnnotation.Url)?.url ?: inline.destination
-                    onLinkClick(target)
-                },
-            ),
-        ) {
-            if (inline.content.isEmpty()) {
-                append(inline.destination)
-            } else {
-                appendInlines(
-                    inlines = inline.content,
+        is FhMdInline.Link -> if (!isSafeLinkDestination(inline.destination)) {
+            appendLinkContent(
+                inline = inline,
+                style = style,
+                onLinkClick = onLinkClick,
+            )
+        } else {
+            withLink(
+                LinkAnnotation.Url(
+                    url = inline.destination,
+                    styles = TextLinkStyles(style = style.linkStyle),
+                    linkInteractionListener = LinkInteractionListener { annotation ->
+                        val target = (annotation as? LinkAnnotation.Url)?.url ?: inline.destination
+                        onLinkClick(target)
+                    },
+                ),
+            ) {
+                appendLinkContent(
+                    inline = inline,
                     style = style,
                     onLinkClick = onLinkClick,
                 )
             }
         }
+
+        is FhMdInline.Image -> append(imageInlineFallbackText(inline))
     }
+}
+
+private fun AnnotatedString.Builder.appendLinkContent(
+    inline: FhMdInline.Link,
+    style: FhMdStyle,
+    onLinkClick: (String) -> Unit,
+) {
+    if (inline.content.isEmpty()) {
+        append(inline.destination)
+    } else {
+        appendInlines(
+            inlines = inline.content,
+            style = style,
+            onLinkClick = onLinkClick,
+        )
+    }
+}
+
+internal fun imageInlineFallbackText(image: FhMdInline.Image): String {
+    return image.alt?.takeIf { it.isNotBlank() } ?: image.source
 }

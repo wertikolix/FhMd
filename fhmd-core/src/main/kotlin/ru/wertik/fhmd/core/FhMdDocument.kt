@@ -1,4 +1,4 @@
-package com.fhmd.core
+package ru.wertik.fhmd.core
 
 data class FhMdDocument(
     val blocks: List<FhMdBlock>,
@@ -17,6 +17,7 @@ sealed interface FhMdBlock {
     data class ListBlock(
         val ordered: Boolean,
         val items: List<FhMdListItem>,
+        val startNumber: Int = 1,
     ) : FhMdBlock
 
     data class Quote(
@@ -27,6 +28,14 @@ sealed interface FhMdBlock {
         val code: String,
         val language: String?,
     ) : FhMdBlock
+
+    data class Image(
+        val source: String,
+        val alt: String?,
+        val title: String?,
+    ) : FhMdBlock
+
+    data object ThematicBreak : FhMdBlock
 
     data class Table(
         val header: List<FhMdTableCell>,
@@ -69,5 +78,11 @@ sealed interface FhMdInline {
     data class Link(
         val destination: String,
         val content: List<FhMdInline>,
+    ) : FhMdInline
+
+    data class Image(
+        val source: String,
+        val alt: String?,
+        val title: String?,
     ) : FhMdInline
 }

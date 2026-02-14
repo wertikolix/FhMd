@@ -1,8 +1,8 @@
-package com.fhmd.compose.android
+package ru.wertik.fhmd.compose.android
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.runtime.Immutable
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.SpanStyle
@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-@Immutable
 data class FhMdStyle(
     val heading1: TextStyle = TextStyle(fontSize = 30.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold),
     val heading2: TextStyle = TextStyle(fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold),
@@ -53,6 +52,12 @@ data class FhMdStyle(
     val tableBorderColor: Color = Color(0xFFD0D7DE),
     val tableBorderWidth: Dp = 1.dp,
     val tableHeaderBackground: Color = Color(0xFFF7F9FB),
+    val thematicBreakColor: Color = Color(0xFFD0D7DE),
+    val thematicBreakThickness: Dp = 1.dp,
+    val imageShape: Shape = RoundedCornerShape(8.dp),
+    val imageBackground: Color = Color(0xFFF7F9FB),
+    val imageMaxHeight: Dp = 360.dp,
+    val imageContentScale: ContentScale = ContentScale.Fit,
 ) {
     fun heading(level: Int): TextStyle {
         return when (level.coerceIn(1, 6)) {

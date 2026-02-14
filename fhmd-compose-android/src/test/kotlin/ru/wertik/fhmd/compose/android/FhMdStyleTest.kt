@@ -1,4 +1,4 @@
-package com.fhmd.compose.android
+package ru.wertik.fhmd.compose.android
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

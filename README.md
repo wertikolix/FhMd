@@ -6,9 +6,9 @@ Markdown renderer for Compose (Android-first, multiplatform-ready).
 
 ## Status
 
-`0.1.0-alpha04` (in progress, early alpha, API may change).
+`0.1.0-alpha05` (in progress, early alpha, API may change).
 
-Next draft notes: [`0.1.0-alpha04`](docs/releases/0.1.0-alpha04.md).
+Next draft notes: [`0.1.0-alpha05`](docs/releases/0.1.0-alpha05.md).
 
 ## Goals
 
@@ -23,7 +23,7 @@ Next draft notes: [`0.1.0-alpha04`](docs/releases/0.1.0-alpha04.md).
 - `fhmd-compose-android`: Compose renderer for `FhMdDocument`
 - `sample-app`: Android sample for manual verification
 
-## Supported (`0.1.0-alpha04`)
+## Supported (`0.1.0-alpha05`)
 
 - Parser: `commonmark-java` (`0.27.1`)
 - Public parser API:
@@ -31,9 +31,11 @@ Next draft notes: [`0.1.0-alpha04`](docs/releases/0.1.0-alpha04.md).
 - Blocks:
   - heading
   - paragraph
-  - bullet/ordered list
+  - bullet/ordered list (with ordered list start number)
   - quote
   - fenced/indented code block
+  - standalone image block (`![alt](url "title")`)
+  - thematic breaks (`---`)
   - tables (GFM pipe tables)
 - Inlines:
   - text
@@ -41,19 +43,20 @@ Next draft notes: [`0.1.0-alpha04`](docs/releases/0.1.0-alpha04.md).
   - italic
   - inline code
   - link
+  - inline image AST (rendered as fallback text inside text flows)
   - soft/hard line breaks (mapped to `\n`)
 - Renderer:
   - Compose renderer for `FhMdDocument`
   - basic default styles (`FhMdStyle`)
   - link click callback: `onLinkClick: (String) -> Unit`
+  - link safety filter (`http`, `https`, `mailto`)
+  - image safety filter (`http`, `https`; unsafe schemes fallback to text)
 
 ## Not Supported Yet
 
-- Images
 - HTML blocks/inline HTML
 - Strikethrough
 - Task lists
-- Thematic breaks (`---`)
 - Footnotes/front matter/syntax extensions
 - Rich theming system (beyond basic style object)
 - Compose Multiplatform targets (architecture is prepared, Android module implemented first)
@@ -61,11 +64,16 @@ Next draft notes: [`0.1.0-alpha04`](docs/releases/0.1.0-alpha04.md).
 ## Usage
 
 ```kotlin
+import ru.wertik.fhmd.core.CommonmarkFhMdParser
+import ru.wertik.fhmd.core.FhMdParser
+
 val parser: FhMdParser = CommonmarkFhMdParser()
 val document = parser.parse(markdown)
 ```
 
 ```kotlin
+import ru.wertik.fhmd.compose.android.FhMd
+
 FhMd(
     markdown = markdown,
     onLinkClick = { link -> /* handle link */ },

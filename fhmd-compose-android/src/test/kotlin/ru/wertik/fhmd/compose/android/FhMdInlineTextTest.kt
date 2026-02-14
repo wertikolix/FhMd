@@ -1,14 +1,15 @@
-package com.fhmd.compose.android
+package ru.wertik.fhmd.compose.android
 
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.fhmd.core.CommonmarkFhMdParser
-import com.fhmd.core.FhMdBlock
-import com.fhmd.core.FhMdInline
-import com.fhmd.core.FhMdTableAlignment
+import ru.wertik.fhmd.core.CommonmarkFhMdParser
+import ru.wertik.fhmd.core.FhMdBlock
+import ru.wertik.fhmd.core.FhMdInline
+import ru.wertik.fhmd.core.FhMdTableAlignment
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -167,6 +168,24 @@ class FhMdInlineTextTest {
     }
 
     @Test
+    fun `unsafe link scheme is rendered as plain text without click annotation`() {
+        val style = FhMdStyle()
+        val text = buildInlineAnnotatedString(
+            inlines = listOf(
+                FhMdInline.Link(
+                    destination = "javascript:alert(1)",
+                    content = listOf(FhMdInline.Text("run")),
+                ),
+            ),
+            style = style,
+            onLinkClick = {},
+        )
+
+        assertEquals("run", text.text)
+        assertTrue(text.getLinkAnnotations(0, text.length).isEmpty())
+    }
+
+    @Test
     fun `parser to inline render integration keeps links and inline code`() {
         val parser = CommonmarkFhMdParser()
         val document = parser.parse("See [docs](https://example.com) and `code`.")
@@ -186,11 +205,70 @@ class FhMdInlineTextTest {
     }
 
     @Test
+    fun `inline image fallback uses alt text or source`() {
+        assertEquals(
+            "logo",
+            imageInlineFallbackText(
+                FhMdInline.Image(
+                    source = "https://example.com/logo.png",
+                    alt = "logo",
+                    title = null,
+                ),
+            ),
+        )
+        assertEquals(
+            "https://example.com/logo.png",
+            imageInlineFallbackText(
+                FhMdInline.Image(
+                    source = "https://example.com/logo.png",
+                    alt = null,
+                    title = null,
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun `parser to inline render integration maps inline image to fallback text`() {
+        val parser = CommonmarkFhMdParser()
+        val document = parser.parse("before ![logo](https://example.com/logo.png) after")
+        val paragraph = document.blocks.single() as FhMdBlock.Paragraph
+
+        val rendered = buildInlineAnnotatedString(
+            inlines = paragraph.content,
+            style = FhMdStyle(),
+            onLinkClick = {},
+        )
+
+        assertEquals("before logo after", rendered.text)
+    }
+
+    @Test
     fun `table cell alignment mapping covers all variants`() {
         assertEquals(TextAlign.Start, tableCellAlignment(FhMdTableAlignment.LEFT))
         assertEquals(TextAlign.Center, tableCellAlignment(FhMdTableAlignment.CENTER))
         assertEquals(TextAlign.End, tableCellAlignment(FhMdTableAlignment.RIGHT))
         assertEquals(TextAlign.Start, tableCellAlignment(null))
+    }
+
+    @Test
+    fun `ordered list marker respects start number`() {
+        assertEquals("5.", listMarkerText(ordered = true, startNumber = 5, index = 0))
+        assertEquals("6.", listMarkerText(ordered = true, startNumber = 5, index = 1))
+        assertEquals("•", listMarkerText(ordered = false, startNumber = 100, index = 7))
+    }
+
+    @Test
+    fun `url safety allows only configured schemes`() {
+        assertTrue(isSafeLinkDestination("https://example.com"))
+        assertTrue(isSafeLinkDestination("mailto:hello@example.com"))
+        assertFalse(isSafeLinkDestination("intent://scan/#Intent;scheme=zxing;end"))
+        assertFalse(isSafeLinkDestination("javascript:alert(1)"))
+
+        assertTrue(isSafeImageSource("http://example.com/image.png"))
+        assertTrue(isSafeImageSource("https://example.com/image.png"))
+        assertFalse(isSafeImageSource("file:///sdcard/image.png"))
+        assertFalse(isSafeImageSource("content://media/external/images/media/1"))
     }
 
     @Test

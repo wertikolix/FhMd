@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.fhmd.compose.android"
+    namespace = "ru.wertik.fhmd.compose.android"
     compileSdk = 36
 
     defaultConfig {
@@ -39,6 +39,8 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
+    implementation(libs.coil3.compose)
+    implementation(libs.coil3.network.okhttp)
 
     debugImplementation(libs.compose.ui.tooling)
 
