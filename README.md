@@ -6,8 +6,8 @@ Android-first Markdown renderer for Jetpack Compose with architecture prepared f
 
 ## Status
 
-- Current stable minor: `0.3.0`
-- Release notes: [`docs/releases/0.3.0.md`](docs/releases/0.3.0.md)
+- Current stable minor: `0.3.1`
+- Release notes: [`docs/releases/0.3.1.md`](docs/releases/0.3.1.md)
 - Maturity: lightweight production-ready core subset (Markdown-first)
 
 ## Why Orca
@@ -94,7 +94,7 @@ CommonmarkOrcaParser(
 )
 ```
 
-## Supported Syntax (`0.3.0`)
+## Supported Syntax (`0.3.1`)
 
 ### Blocks
 
@@ -211,7 +211,7 @@ For release-like check:
 
 ## Versioning
 
-- Stable releases use plain semver tags like `0.3.0`, `0.3.1`
+- Stable releases use plain semver tags like `0.3.1`, `0.3.2`
 - Pre-releases use `-alpha`, `-beta`, `-rc`
 - Maven Central artifacts are immutable after publish
 
