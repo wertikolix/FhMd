@@ -1,34 +1,42 @@
 # FhMd
 
-`FhMd` is an open-source Markdown renderer focused on Compose UI.
+Markdown renderer for Compose (Android-first, multiplatform-ready).
 
-## Project Status
+## Status
 
-This repository is currently in an early stage.
-The codebase is being prepared, and the README defines the initial scope.
+Early development. Not production-ready yet.
 
-## Vision
+## Goals
 
-- Provide a clean Markdown-to-Compose rendering pipeline.
-- Keep the API simple for common app use cases.
-- Stay lightweight and easy to integrate.
-- Support extension points for custom rendering behavior.
+- Clean Markdown -> Compose rendering pipeline
+- Simple API for common app use cases
+- Lightweight integration
+- Extensible rendering hooks
 
-## Planned Scope
+## Modules
 
-- Core Markdown blocks: headings, paragraphs, lists, code blocks, quotes.
-- Inline formatting: bold, italic, inline code, links.
-- Sensible default styling for Compose screens.
-- Hooks for custom component mapping and theme integration.
+- `fhmd-core` (planned): parser and rendering model
+- `fhmd-compose-android` (planned): Compose Android renderer
+
+## Scope (v0.1)
+
+- [ ] Headings, paragraphs, lists, quotes, code blocks
+- [ ] Bold, italic, inline code, links
+- [ ] Default Compose styling
+- [ ] Custom mapping/theme hooks
+
+## Usage
+
+TBD (API is not stable yet).
 
 ## Contributing
 
 Contributions are welcome.
 
-1. Open an issue to discuss significant changes.
-2. Fork the repo and create a focused branch.
-3. Submit a pull request with a clear description of what changed and why.
+1. Open an issue for significant changes.
+2. Create a focused branch.
+3. Submit a PR with clear rationale and test notes.
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for details.
+MIT. See `LICENSE`.
