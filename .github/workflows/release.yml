@@ -60,7 +60,7 @@ jobs:
           echo "Resolved release version: ${VERSION}"
 
       - name: Build tests and release artifacts
-        run: ./gradlew --no-daemon --build-cache :orca-core:test :orca-compose:testDebugUnitTest :orca-compose:assembleRelease :orca-core:jar :sample-app:assembleRelease :sample-app:bundleRelease -PorcaVersion=${{ steps.release-version.outputs.version }}
+        run: ./gradlew --no-daemon --build-cache :orca-core:jvmTest :orca-compose:testDebugUnitTest :orca-compose:assembleRelease :orca-core:jvmJar :sample-app:assembleRelease :sample-app:bundleRelease -PorcaVersion=${{ steps.release-version.outputs.version }}
 
       - name: Import GPG signing key (optional)
         if: startsWith(github.ref, 'refs/tags/')
