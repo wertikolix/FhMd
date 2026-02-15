@@ -96,6 +96,7 @@ data class OrcaCodeBlockStyle(
     val lineNumberMinWidth: Dp = 28.dp,
     val lineNumberEndPadding: Dp = 12.dp,
     val languageLabelPadding: PaddingValues = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+    val showCopyButton: Boolean = true,
     val syntaxHighlightingEnabled: Boolean = true,
     val highlightKeyword: SpanStyle = SpanStyle(color = Color(0xFF0B57D0), fontWeight = FontWeight.SemiBold),
     val highlightString: SpanStyle = SpanStyle(color = Color(0xFF2E7D32)),

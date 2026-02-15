@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,13 +22,19 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.delay
 import ru.wertik.orca.core.OrcaBlock
 import ru.wertik.orca.core.OrcaTaskState
 
@@ -381,6 +388,9 @@ private fun CodeBlockNode(
             null
         }
     }
+
+    val showHeader = languageLabel != null || style.code.showCopyButton
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -390,19 +400,33 @@ private fun CodeBlockNode(
             .padding(style.code.padding),
         verticalArrangement = Arrangement.spacedBy(style.layout.nestedBlockSpacing),
     ) {
-        if (languageLabel != null) {
-            Text(
-                text = languageLabel,
-                style = style.code.languageLabel,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .background(
-                        color = style.code.languageLabelBackground,
-                        shape = style.code.shape,
+        if (showHeader) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (languageLabel != null) {
+                    Text(
+                        text = languageLabel,
+                        style = style.code.languageLabel,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .background(
+                                color = style.code.languageLabelBackground,
+                                shape = style.code.shape,
+                            )
+                            .padding(style.code.languageLabelPadding),
                     )
-                    .padding(style.code.languageLabelPadding),
-            )
+                } else {
+                    Spacer(modifier = Modifier.width(0.dp))
+                }
+
+                if (style.code.showCopyButton) {
+                    CopyButton(code = block.code, style = style)
+                }
+            }
         }
 
         Row(
@@ -430,6 +454,38 @@ private fun CodeBlockNode(
             }
         }
     }
+}
+
+@Composable
+private fun CopyButton(
+    code: String,
+    style: OrcaStyle,
+) {
+    val clipboardManager = LocalClipboardManager.current
+    var copied by remember { mutableStateOf(false) }
+
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(2000)
+            copied = false
+        }
+    }
+
+    Text(
+        text = if (copied) "Copied" else "Copy",
+        style = style.code.languageLabel,
+        maxLines = 1,
+        modifier = Modifier
+            .background(
+                color = style.code.languageLabelBackground,
+                shape = style.code.shape,
+            )
+            .clickable {
+                clipboardManager.setText(AnnotatedString(code))
+                copied = true
+            }
+            .padding(style.code.languageLabelPadding),
+    )
 }
 
 @Composable
