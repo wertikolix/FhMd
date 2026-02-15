@@ -210,5 +210,69 @@ data class OrcaStyle(
     val imageContentScale: ContentScale get() = image.contentScale
 }
 
+object OrcaDefaults {
+
+    fun lightStyle(): OrcaStyle = OrcaStyle()
+
+    fun darkStyle(): OrcaStyle = OrcaStyle(
+        inline = OrcaInlineStyle(
+            inlineCode = SpanStyle(
+                fontFamily = FontFamily.Monospace,
+                background = Color(0x1AFFFFFF),
+            ),
+            link = SpanStyle(
+                color = Color(0xFF82B1FF),
+                textDecoration = TextDecoration.Underline,
+            ),
+            footnoteReference = SpanStyle(
+                baselineShift = BaselineShift.Superscript,
+                fontSize = 12.sp,
+                color = Color(0xFF90A4AE),
+            ),
+        ),
+        quote = OrcaQuoteStyle(
+            stripeColor = Color(0xFF546E7A),
+        ),
+        code = OrcaCodeBlockStyle(
+            text = TextStyle(
+                fontSize = 14.sp,
+                lineHeight = 20.sp,
+                fontFamily = FontFamily.Monospace,
+                color = Color(0xFFD4D4D4),
+            ),
+            languageLabel = TextStyle(
+                fontSize = 12.sp,
+                lineHeight = 16.sp,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF9E9E9E),
+            ),
+            lineNumber = TextStyle(
+                fontSize = 12.sp,
+                lineHeight = 20.sp,
+                fontFamily = FontFamily.Monospace,
+                color = Color(0xFF616161),
+            ),
+            background = Color(0xFF1E1E1E),
+            languageLabelBackground = Color(0x1AFFFFFF),
+            borderColor = Color(0xFF333333),
+            highlightKeyword = SpanStyle(color = Color(0xFF569CD6), fontWeight = FontWeight.SemiBold),
+            highlightString = SpanStyle(color = Color(0xFFCE9178)),
+            highlightComment = SpanStyle(color = Color(0xFF6A9955), fontStyle = FontStyle.Italic),
+            highlightNumber = SpanStyle(color = Color(0xFFB5CEA8)),
+        ),
+        table = OrcaTableStyle(
+            borderColor = Color(0xFF333333),
+            headerBackground = Color(0xFF252525),
+        ),
+        thematicBreak = OrcaThematicBreakStyle(
+            color = Color(0xFF424242),
+        ),
+        image = OrcaImageStyle(
+            background = Color(0xFF252525),
+        ),
+    )
+}
+
 internal val boldStyle = SpanStyle(fontWeight = FontWeight.Bold)
 internal val italicStyle = SpanStyle(fontStyle = FontStyle.Italic)
