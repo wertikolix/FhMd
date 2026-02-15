@@ -92,11 +92,12 @@ signing {
 
 publishing {
     publications.withType<MavenPublication>().configureEach {
-        artifactId = if (name == "kotlinMultiplatform") {
-            "orca-compose"
-        } else {
-            "orca-compose-$name"
+        val platformSuffix = when (name) {
+            "kotlinMultiplatform" -> ""
+            "androidRelease" -> "-android"
+            else -> "-$name"
         }
+        artifactId = "orca-compose$platformSuffix"
 
         pom {
             name.set("Orca Compose")

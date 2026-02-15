@@ -37,25 +37,12 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 ## Maven
 
 ```kotlin
-// Kotlin Multiplatform
-kotlin {
-    sourceSets {
-        commonMain.dependencies {
-            implementation("ru.wertik:orca-core:<version>")
-            implementation("ru.wertik:orca-compose:<version>")
-        }
-    }
-}
+// Kotlin Multiplatform (commonMain)
+implementation("ru.wertik:orca-core:0.5.0")
+implementation("ru.wertik:orca-compose:0.5.0")
 ```
 
-For Android-only projects:
-
-```kotlin
-dependencies {
-    implementation("ru.wertik:orca-core-jvm:<version>")
-    implementation("ru.wertik:orca-compose-android:<version>")
-}
-```
+Gradle resolves platform-specific artifacts automatically (`orca-core-jvm`, `orca-compose-android`, etc.).
 
 ## Quick Start
 
@@ -69,8 +56,8 @@ val parser: OrcaParser = CommonmarkOrcaParser()
 val document = parser.parse(markdown)
 ```
 
-> `CommonmarkOrcaParser` uses `commonmark-java` and is available only on JVM targets (Android, Desktop).
-> For iOS/wasmJs, provide your own `OrcaParser` implementation or pass a pre-parsed `OrcaDocument`.
+> `CommonmarkOrcaParser` uses `commonmark-java` and is available on JVM targets only (Android, Desktop).
+> On iOS/wasmJs there is no built-in parser yet. Use the `Orca(document = ...)` overload with a pre-parsed `OrcaDocument`, or implement `OrcaParser` with a multiplatform Markdown library.
 
 ### Render from markdown
 
@@ -284,13 +271,14 @@ For release-like check:
   )
 ```
 
-### Maven artifact rename
+### Maven artifact
 
 ```diff
 - implementation("ru.wertik:orca-compose:0.4.5")
-+ implementation("ru.wertik:orca-compose:0.5.0")        // KMP metadata
-+ implementation("ru.wertik:orca-compose-android:0.5.0") // Android-only
++ implementation("ru.wertik:orca-compose:0.5.0")
 ```
+
+Gradle resolves the correct platform artifact automatically.
 
 ## Versioning
 
