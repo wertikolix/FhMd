@@ -1,47 +1,65 @@
 # Orca
 
-Android-first Markdown renderer for Jetpack Compose with architecture prepared for future Compose Multiplatform split.
+Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop (JVM)**, and **wasmJs**.
 
 [![CI](https://github.com/wertikolix/Orca/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/wertikolix/Orca/actions/workflows/ci.yml?query=branch%3Amain)
 [![Maven Central](https://img.shields.io/maven-central/v/ru.wertik/orca-core)](https://central.sonatype.com/artifact/ru.wertik/orca-core)
 
 ## Status
 
-- Current stable minor: `0.4.1`
-- Release notes: [`docs/releases/0.4.1.md`](docs/releases/0.4.1.md)
+- Current stable minor: `0.5.0`
+- Release notes: [`docs/releases/0.5.0.md`](docs/releases/0.5.0.md)
 - Maturity: lightweight production-ready core subset (Markdown-first)
 
 ## Why Orca
 
 - Small API surface
-- Predictable AST (`orca-core`) and Compose renderer (`orca-compose-android`)
+- Predictable AST (`orca-core`) and Compose renderer (`orca-compose`)
 - Safe defaults for links and images
 - No mandatory heavy runtime dependencies
+- Compose Multiplatform: single codebase for Android, iOS, Desktop, Web
 
 ## Modules
 
 - `orca-core`
-  - AST model
-  - parser interface
-  - `commonmark-java` mapping
-- `orca-compose-android`
-  - Compose renderer for `OrcaDocument`
-  - style model (`OrcaStyle`)
+  - Kotlin Multiplatform (commonMain + jvmMain)
+  - AST model (common)
+  - parser interface (common)
+  - `commonmark-java` mapping (JVM)
+- `orca-compose`
+  - Compose Multiplatform renderer for `OrcaDocument`
+  - Targets: Android, iOS, Desktop (JVM), wasmJs
+  - Style model (`OrcaStyle`)
+  - Image loading via Coil 3 + Ktor
 - `sample-app`
   - Android demo for manual checks
 
 ## Maven
 
 ```kotlin
+// Kotlin Multiplatform
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("ru.wertik:orca-core:<version>")
+            implementation("ru.wertik:orca-compose:<version>")
+        }
+    }
+}
+```
+
+For Android-only projects:
+
+```kotlin
 dependencies {
-    implementation("ru.wertik:orca-core:<version>")
-    implementation("ru.wertik:orca-compose:<version>")
+    implementation("ru.wertik:orca-core-jvm:<version>")
+    implementation("ru.wertik:orca-compose-android:<version>")
 }
 ```
 
 ## Quick Start
 
-### Parse markdown
+### Parse markdown (JVM only)
 
 ```kotlin
 import ru.wertik.orca.core.CommonmarkOrcaParser
@@ -51,14 +69,19 @@ val parser: OrcaParser = CommonmarkOrcaParser()
 val document = parser.parse(markdown)
 ```
 
+> `CommonmarkOrcaParser` uses `commonmark-java` and is available only on JVM targets (Android, Desktop).
+> For iOS/wasmJs, provide your own `OrcaParser` implementation or pass a pre-parsed `OrcaDocument`.
+
 ### Render from markdown
 
 ```kotlin
-import ru.wertik.orca.compose.android.Orca
-import ru.wertik.orca.compose.android.OrcaRootLayout
+import ru.wertik.orca.compose.Orca
+import ru.wertik.orca.compose.OrcaRootLayout
+import ru.wertik.orca.core.CommonmarkOrcaParser
 
 Orca(
     markdown = markdown,
+    parser = CommonmarkOrcaParser(),
     rootLayout = OrcaRootLayout.COLUMN, // use when parent already controls scrolling
     onLinkClick = { url ->
         // open via your app policy
@@ -69,7 +92,7 @@ Orca(
 ### Render from pre-parsed AST
 
 ```kotlin
-import ru.wertik.orca.compose.android.Orca
+import ru.wertik.orca.compose.Orca
 
 Orca(
     document = document,
@@ -95,7 +118,7 @@ CommonmarkOrcaParser(
 )
 ```
 
-## Supported Syntax (`0.4.1`)
+## Supported Syntax (`0.5.0`)
 
 ### Blocks
 
@@ -161,6 +184,7 @@ CommonmarkOrcaParser(
 - selectable code text
 - optional line numbers for multiline blocks
 - horizontal scroll for long lines (no forced wrap)
+- optional copy-to-clipboard button
 
 ### Table rendering
 
@@ -186,12 +210,13 @@ Example:
 ```kotlin
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import ru.wertik.orca.compose.android.Orca
-import ru.wertik.orca.compose.android.OrcaCodeBlockStyle
-import ru.wertik.orca.compose.android.OrcaStyle
+import ru.wertik.orca.compose.Orca
+import ru.wertik.orca.compose.OrcaCodeBlockStyle
+import ru.wertik.orca.compose.OrcaStyle
 
 Orca(
     markdown = markdown,
+    parser = CommonmarkOrcaParser(),
     style = OrcaStyle(
         code = OrcaCodeBlockStyle(
             background = Color(0xFFF8F9FB),
@@ -210,15 +235,27 @@ Orca(
 
 Always keep your own URL-opening policy in `onLinkClick`.
 
+## Platform Support
+
+| Platform | orca-core | orca-compose | Parser |
+|---|---|---|---|
+| Android | commonMain + jvmMain | full | `CommonmarkOrcaParser` |
+| Desktop (JVM) | commonMain + jvmMain | full | `CommonmarkOrcaParser` |
+| iOS | commonMain | full | bring your own |
+| wasmJs (Web) | commonMain | full | bring your own |
+
+> On non-JVM targets, `orca-core` provides the AST model and parser interface.
+> You need to supply your own `OrcaParser` implementation or pass pre-parsed `OrcaDocument` objects.
+
 ## Not Supported Yet
 
 - built-in LaTeX math rendering
-- Compose Multiplatform target modules (architecture ready, Android implementation first)
+- native parser for non-JVM targets (iOS, wasmJs)
 
 ## Verification
 
 ```bash
-./gradlew --no-daemon --build-cache :orca-core:test :orca-compose-android:testDebugUnitTest :sample-app:assembleDebug
+./gradlew --no-daemon --build-cache :orca-core:jvmTest :orca-compose:testDebugUnitTest :sample-app:assembleDebug
 ```
 
 For release-like check:
@@ -227,9 +264,37 @@ For release-like check:
 ./gradlew --no-daemon --build-cache :sample-app:assembleRelease :sample-app:bundleRelease
 ```
 
+## Migration from 0.4.x
+
+### Package rename
+
+```diff
+- import ru.wertik.orca.compose.android.Orca
+- import ru.wertik.orca.compose.android.OrcaStyle
++ import ru.wertik.orca.compose.Orca
++ import ru.wertik.orca.compose.OrcaStyle
+```
+
+### Parser is now a required parameter
+
+```diff
+  Orca(
+      markdown = markdown,
++     parser = CommonmarkOrcaParser(),
+  )
+```
+
+### Maven artifact rename
+
+```diff
+- implementation("ru.wertik:orca-compose:0.4.5")
++ implementation("ru.wertik:orca-compose:0.5.0")        // KMP metadata
++ implementation("ru.wertik:orca-compose-android:0.5.0") // Android-only
+```
+
 ## Versioning
 
-- Stable releases use plain semver tags like `0.4.0`, `0.4.1`
+- Stable releases use plain semver tags like `0.5.0`
 - Pre-releases use `-alpha`, `-beta`, `-rc`
 - Maven Central artifacts are immutable after publish
 
