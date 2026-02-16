@@ -1,4 +1,5 @@
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
 plugins {
@@ -35,11 +36,19 @@ kotlin {
 
 publishing {
     publications.withType<MavenPublication>().configureEach {
-        artifactId = if (name == "kotlinMultiplatform") {
+        val publicationArtifactId = if (name == "kotlinMultiplatform") {
             "orca-core"
         } else {
             "orca-core-$name"
         }
+        artifactId = publicationArtifactId
+
+        val javadocJar = tasks.register("${name}JavadocJar", Jar::class) {
+            archiveBaseName.set(publicationArtifactId)
+            archiveVersion.set(project.version.toString())
+            archiveClassifier.set("javadoc")
+        }
+        artifact(javadocJar)
 
         pom {
             name.set("Orca Core")
@@ -95,6 +104,17 @@ publishing {
 }
 
 signing {
-    useGpgCmd()
+    val signingKey = providers.gradleProperty("signingInMemoryKey").orNull
+        ?: providers.environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKey").orNull
+        ?: providers.environmentVariable("SIGNING_IN_MEMORY_KEY").orNull
+    val signingKeyPassword = providers.gradleProperty("signingInMemoryKeyPassword").orNull
+        ?: providers.environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKeyPassword").orNull
+        ?: providers.environmentVariable("SIGNING_IN_MEMORY_KEY_PASSWORD").orNull
+
+    if (signingKey.isNullOrBlank()) {
+        useGpgCmd()
+    } else {
+        useInMemoryPgpKeys(signingKey, signingKeyPassword)
+    }
     sign(publishing.publications)
 }

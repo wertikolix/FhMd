@@ -1,4 +1,5 @@
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
@@ -86,7 +87,18 @@ android {
 }
 
 signing {
-    useGpgCmd()
+    val signingKey = providers.gradleProperty("signingInMemoryKey").orNull
+        ?: providers.environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKey").orNull
+        ?: providers.environmentVariable("SIGNING_IN_MEMORY_KEY").orNull
+    val signingKeyPassword = providers.gradleProperty("signingInMemoryKeyPassword").orNull
+        ?: providers.environmentVariable("ORG_GRADLE_PROJECT_signingInMemoryKeyPassword").orNull
+        ?: providers.environmentVariable("SIGNING_IN_MEMORY_KEY_PASSWORD").orNull
+
+    if (signingKey.isNullOrBlank()) {
+        useGpgCmd()
+    } else {
+        useInMemoryPgpKeys(signingKey, signingKeyPassword)
+    }
     sign(publishing.publications)
 }
 
@@ -97,7 +109,15 @@ publishing {
             "androidRelease" -> "-android"
             else -> "-$name"
         }
-        artifactId = "orca-compose$platformSuffix"
+        val publicationArtifactId = "orca-compose$platformSuffix"
+        artifactId = publicationArtifactId
+
+        val javadocJar = tasks.register("${name}JavadocJar", Jar::class) {
+            archiveBaseName.set(publicationArtifactId)
+            archiveVersion.set(project.version.toString())
+            archiveClassifier.set("javadoc")
+        }
+        artifact(javadocJar)
 
         pom {
             name.set("Orca Compose")
