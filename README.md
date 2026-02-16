@@ -9,6 +9,7 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 - Current stable minor: `0.6.0`
 - Release notes: [`docs/releases/0.6.0.md`](docs/releases/0.6.0.md)
+- Next changes (unreleased): [`docs/releases/0.6.1.md`](docs/releases/0.6.1.md)
 - Maturity: lightweight production-ready core subset (Markdown-first)
 
 ## Why Orca
@@ -49,25 +50,25 @@ Gradle resolves platform-specific artifacts automatically (`orca-core-jvm`, `orc
 ### Parse markdown
 
 ```kotlin
-import ru.wertik.orca.core.IntellijMarkdownOrcaParser
+import ru.wertik.orca.core.OrcaMarkdownParser
 import ru.wertik.orca.core.OrcaParser
 
-val parser: OrcaParser = IntellijMarkdownOrcaParser()
+val parser: OrcaParser = OrcaMarkdownParser()
 val document = parser.parse(markdown)
 ```
 
-> `IntellijMarkdownOrcaParser` uses `org.jetbrains:markdown` and is available in `commonMain` (Android, iOS, Desktop, wasmJs).
+> `OrcaMarkdownParser` uses `org.jetbrains:markdown` and is available in `commonMain` (Android, iOS, Desktop, wasmJs).
 
 ### Render from markdown
 
 ```kotlin
 import ru.wertik.orca.compose.Orca
 import ru.wertik.orca.compose.OrcaRootLayout
-import ru.wertik.orca.core.IntellijMarkdownOrcaParser
+import ru.wertik.orca.core.OrcaMarkdownParser
 
 Orca(
     markdown = markdown,
-    parser = IntellijMarkdownOrcaParser(),
+    parser = OrcaMarkdownParser(),
     rootLayout = OrcaRootLayout.COLUMN, // use when parent already controls scrolling
     onLinkClick = { url ->
         // open via your app policy
@@ -93,16 +94,21 @@ fun interface OrcaParser {
 }
 ```
 
-`IntellijMarkdownOrcaParser` options:
+`OrcaMarkdownParser` options:
 
 ```kotlin
-IntellijMarkdownOrcaParser(
+OrcaMarkdownParser(
     maxTreeDepth = 64,
     onDepthLimitExceeded = { depth ->
         // observe depth truncation if needed
     },
 )
 ```
+
+Compatibility alias:
+
+- `IntellijMarkdownOrcaParser` is still available but deprecated.
+- Prefer `OrcaMarkdownParser` for new code.
 
 ## Supported Syntax (`0.6.0`)
 
@@ -203,7 +209,7 @@ import ru.wertik.orca.compose.OrcaStyle
 
 Orca(
     markdown = markdown,
-    parser = IntellijMarkdownOrcaParser(),
+    parser = OrcaMarkdownParser(),
     style = OrcaStyle(
         code = OrcaCodeBlockStyle(
             background = Color(0xFFF8F9FB),
@@ -226,10 +232,10 @@ Always keep your own URL-opening policy in `onLinkClick`.
 
 | Platform | orca-core | orca-compose | Parser |
 |---|---|---|---|
-| Android | commonMain + jvmMain | full | `IntellijMarkdownOrcaParser` |
-| Desktop (JVM) | commonMain + jvmMain | full | `IntellijMarkdownOrcaParser` |
-| iOS | commonMain | full | `IntellijMarkdownOrcaParser` |
-| wasmJs (Web) | commonMain | full | `IntellijMarkdownOrcaParser` |
+| Android | commonMain + jvmMain | full | `OrcaMarkdownParser` |
+| Desktop (JVM) | commonMain + jvmMain | full | `OrcaMarkdownParser` |
+| iOS | commonMain | full | `OrcaMarkdownParser` |
+| wasmJs (Web) | commonMain | full | `OrcaMarkdownParser` |
 
 ## Not Supported Yet
 
@@ -253,13 +259,27 @@ For release-like check:
 
 ```diff
 - import ru.wertik.orca.core.CommonmarkOrcaParser
-+ import ru.wertik.orca.core.IntellijMarkdownOrcaParser
++ import ru.wertik.orca.core.OrcaMarkdownParser
 
 - val parser: OrcaParser = CommonmarkOrcaParser()
-+ val parser: OrcaParser = IntellijMarkdownOrcaParser()
++ val parser: OrcaParser = OrcaMarkdownParser()
 ```
 
 `orca-core` parser backend moved from `commonmark-java` to `org.jetbrains:markdown` (`GFMFlavourDescriptor`).
+
+## Migration from 0.6.0
+
+### Parser naming cleanup
+
+```diff
+- import ru.wertik.orca.core.IntellijMarkdownOrcaParser
++ import ru.wertik.orca.core.OrcaMarkdownParser
+
+- val parser: OrcaParser = IntellijMarkdownOrcaParser()
++ val parser: OrcaParser = OrcaMarkdownParser()
+```
+
+`IntellijMarkdownOrcaParser` remains as a deprecated compatibility alias.
 
 ## Migration from 0.4.x
 
@@ -277,7 +297,7 @@ For release-like check:
 ```diff
   Orca(
       markdown = markdown,
-+     parser = IntellijMarkdownOrcaParser(),
++     parser = OrcaMarkdownParser(),
   )
 ```
 

@@ -7,9 +7,9 @@ import org.junit.Test
 import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
 import org.intellij.markdown.parser.MarkdownParser
 
-class IntellijMarkdownOrcaParserTest {
+class OrcaMarkdownParserTest {
 
-    private val parser: OrcaParser = IntellijMarkdownOrcaParser()
+    private val parser: OrcaParser = OrcaMarkdownParser()
 
     @Test
     fun `parse heading and inline formatting`() {
@@ -285,7 +285,7 @@ class IntellijMarkdownOrcaParserTest {
     fun `very deep nesting reports depth limit once`() {
         var callbackCount = 0
         var exceededDepth: Int? = null
-        val parser = IntellijMarkdownOrcaParser(
+        val parser = OrcaMarkdownParser(
             maxTreeDepth = 8,
             onDepthLimitExceeded = { depth ->
                 callbackCount += 1
@@ -306,16 +306,16 @@ class IntellijMarkdownOrcaParserTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `parser requires positive max tree depth`() {
-        IntellijMarkdownOrcaParser(maxTreeDepth = 0)
+        OrcaMarkdownParser(maxTreeDepth = 0)
     }
 
     @Test
     fun `cache key includes parser identity and max tree depth`() {
         val parserA = MarkdownParser(GFMFlavourDescriptor())
         val parserB = MarkdownParser(GFMFlavourDescriptor())
-        val orcaA = IntellijMarkdownOrcaParser(parser = parserA, maxTreeDepth = 64)
-        val orcaB = IntellijMarkdownOrcaParser(parser = parserB, maxTreeDepth = 64)
-        val orcaC = IntellijMarkdownOrcaParser(parser = parserA, maxTreeDepth = 16)
+        val orcaA = OrcaMarkdownParser(parser = parserA, maxTreeDepth = 64)
+        val orcaB = OrcaMarkdownParser(parser = parserB, maxTreeDepth = 64)
+        val orcaC = OrcaMarkdownParser(parser = parserA, maxTreeDepth = 16)
 
         assertTrue(orcaA.cacheKey() != orcaB.cacheKey())
         assertTrue(orcaA.cacheKey() != orcaC.cacheKey())

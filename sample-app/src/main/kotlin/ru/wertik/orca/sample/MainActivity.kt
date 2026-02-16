@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import ru.wertik.orca.compose.Orca
-import ru.wertik.orca.core.IntellijMarkdownOrcaParser
+import ru.wertik.orca.core.OrcaMarkdownParser
 
 class MainActivity : ComponentActivity() {
 
@@ -66,7 +66,7 @@ class MainActivity : ComponentActivity() {
                     val context = LocalContext.current
                     Orca(
                         markdown = markdown,
-                        parser = IntellijMarkdownOrcaParser(),
+                        parser = OrcaMarkdownParser(),
                         modifier = Modifier.padding(16.dp),
                         onLinkClick = { link ->
                             Toast.makeText(context, "link clicked: $link", Toast.LENGTH_SHORT).show()
