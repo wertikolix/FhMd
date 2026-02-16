@@ -104,11 +104,6 @@ OrcaMarkdownParser(
 )
 ```
 
-Compatibility alias:
-
-- `IntellijMarkdownOrcaParser` is still available but deprecated.
-- Prefer `OrcaMarkdownParser` for new code.
-
 ## Supported Syntax (`0.6.3`)
 
 ### Blocks
@@ -278,7 +273,7 @@ For release-like check:
 + val parser: OrcaParser = OrcaMarkdownParser()
 ```
 
-`IntellijMarkdownOrcaParser` remains as a deprecated compatibility alias.
+`IntellijMarkdownOrcaParser` removed from public API.
 
 ## Migration from 0.4.x
 
