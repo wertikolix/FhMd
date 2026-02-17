@@ -51,21 +51,38 @@ private fun detectHighlights(
     language: String,
     style: OrcaStyle,
 ): List<HighlightToken> {
-    val occupied = BooleanArray(code.length)
+    // Use a sorted interval list for O(log n) overlap checks instead of O(n) per match
     val result = mutableListOf<HighlightToken>()
+
+    fun overlapsExisting(start: Int, endExclusive: Int): Boolean {
+        // Binary search for the insertion point by start index
+        // An interval [a, b) overlaps [start, endExclusive) iff a < endExclusive && b > start
+        for (token in result) {
+            if (token.start >= endExclusive) break  // result is sorted by start; no further overlap possible
+            if (token.endExclusive > start) return true
+        }
+        return false
+    }
+
+    fun insertSorted(token: HighlightToken) {
+        // Insert while maintaining sort order by start
+        val insertIndex = result.binarySearchInsertionPoint(token.start)
+        result.add(insertIndex, token)
+    }
 
     fun addMatches(regex: Regex, tokenStyle: SpanStyle) {
         regex.findAll(code).forEach { match ->
             val range = match.range
             if (range.isEmpty()) return@forEach
-            if (range.last >= occupied.size) return@forEach
-            if ((range.first..range.last).any { occupied[it] }) return@forEach
-            (range.first..range.last).forEach { index -> occupied[index] = true }
-            result += HighlightToken(
-                start = range.first,
-                endExclusive = range.last + 1,
+            if (range.last >= code.length) return@forEach
+            val start = range.first
+            val endExclusive = range.last + 1
+            if (overlapsExisting(start, endExclusive)) return@forEach
+            insertSorted(HighlightToken(
+                start = start,
+                endExclusive = endExclusive,
                 style = tokenStyle,
-            )
+            ))
         }
     }
 
@@ -80,18 +97,33 @@ private fun detectHighlights(
         WORD_REGEX.findAll(code).forEach { match ->
             if (match.value !in keywords) return@forEach
             val range = match.range
-            if (range.last >= occupied.size) return@forEach
-            if ((range.first..range.last).any { occupied[it] }) return@forEach
-            (range.first..range.last).forEach { index -> occupied[index] = true }
-            result += HighlightToken(
-                start = range.first,
-                endExclusive = range.last + 1,
+            if (range.last >= code.length) return@forEach
+            val start = range.first
+            val endExclusive = range.last + 1
+            if (overlapsExisting(start, endExclusive)) return@forEach
+            insertSorted(HighlightToken(
+                start = start,
+                endExclusive = endExclusive,
                 style = style.code.highlightKeyword,
-            )
+            ))
         }
     }
 
-    return result.sortedBy { token -> token.start }
+    return result
+}
+
+/**
+ * Binary search for the insertion point where a token with the given [start] should be placed
+ * to keep the list sorted by start index.
+ */
+private fun List<HighlightToken>.binarySearchInsertionPoint(start: Int): Int {
+    var low = 0
+    var high = size
+    while (low < high) {
+        val mid = (low + high) ushr 1
+        if (this[mid].start < start) low = mid + 1 else high = mid
+    }
+    return low
 }
 
 private fun commentRegexes(language: String): List<Regex> {
