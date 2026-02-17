@@ -71,7 +71,7 @@ private fun extractDelimitedFrontMatter(
     }
     val markdownBody = lines.drop(closingIndex + 1)
         .joinToString("\n")
-        .trimStart('\n')
+        .removePrefix("\n")
 
     return FrontMatterExtraction(
         markdown = markdownBody,
