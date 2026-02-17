@@ -12,14 +12,17 @@ internal class OrcaParserCache(
         input: String,
         parse: () -> OrcaParseResult,
     ): OrcaParseResult {
-        lock.withLock {
-            val cached = entries[key]
-            if (cached != null && cached.input == input) {
+        val cached = lock.withLock {
+            val entry = entries[key]
+            if (entry != null && entry.input == input) {
                 entries.remove(key)
-                entries[key] = cached
-                return cached.result
+                entries[key] = entry
+                entry.result
+            } else {
+                null
             }
         }
+        if (cached != null) return cached
 
         val parsed = parse()
 
@@ -47,11 +50,6 @@ internal class OrcaParserCache(
         }
     }
 }
-
-private data class CachedParseEntry(
-    val input: String,
-    val result: OrcaParseResult,
-)
 
 private data class CachedParseEntry(
     val input: String,
