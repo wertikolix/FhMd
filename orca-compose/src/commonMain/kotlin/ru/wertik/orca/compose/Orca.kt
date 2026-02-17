@@ -52,9 +52,27 @@ fun Orca(
     streamingDebounceMs: Long = DEFAULT_STREAMING_DEBOUNCE_MS,
 ) {
     val parserKey = remember(parser) { parser.cacheKey() }
-    val emptyDocument = remember { OrcaDocument(emptyList()) }
-    var document by remember(parserKey) { mutableStateOf(emptyDocument) }
 
+    // Synchronous initial parse so the very first frame has the correct layout size.
+    // This eliminates the empty→content "jump" when items scroll into a LazyColumn.
+    // Only runs once per composable instance (keyed on parserKey only, not markdown).
+    val initialDocument = remember(parserKey) {
+        try {
+            if (parseCacheKey == null) {
+                parser.parse(markdown)
+            } else {
+                parser.parseCached(key = parseCacheKey, input = markdown)
+            }
+        } catch (_: Throwable) {
+            OrcaDocument(emptyList())
+        }
+    }
+
+    var document by remember(parserKey) { mutableStateOf(initialDocument) }
+
+    // Debounced re-parse for subsequent updates (streaming, edits).
+    // On first composition this still fires but the result will match initialDocument
+    // (especially with caching enabled), so no visual jump occurs.
     LaunchedEffect(markdown, parserKey, parseCacheKey) {
         if (streamingDebounceMs > 0) {
             delay(streamingDebounceMs)
