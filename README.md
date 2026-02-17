@@ -7,8 +7,8 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ## Status
 
-- Current stable minor: `0.6.5`
-- Release notes: [`docs/releases/0.6.5.md`](docs/releases/0.6.5.md)
+- Current stable minor: `0.7.0`
+- Release notes: [`docs/releases/0.7.0.md`](docs/releases/0.7.0.md)
 - Maturity: lightweight production-ready core subset (Markdown-first)
 
 ## Why Orca
@@ -38,8 +38,8 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ```kotlin
 // Kotlin Multiplatform (commonMain)
-implementation("ru.wertik:orca-core:0.6.5")
-implementation("ru.wertik:orca-compose:0.6.5")
+implementation("ru.wertik:orca-core:0.7.0")
+implementation("ru.wertik:orca-compose:0.7.0")
 ```
 
 Gradle resolves platform-specific artifacts automatically (`orca-core-jvm`, `orca-compose-android`, etc.).
@@ -113,6 +113,21 @@ Orca(
 )
 ```
 
+### Streaming / LLM chat
+
+For token-by-token streaming (e.g. LLM responses), Orca debounces parse operations to avoid redundant work:
+
+```kotlin
+Orca(
+    markdown = streamingMarkdown, // updated on every token
+    parser = OrcaMarkdownParser(),
+    parseCacheKey = "message-42",
+    streamingDebounceMs = 80, // default; set 0 to disable
+)
+```
+
+During fast updates, only the latest markdown value is parsed after the debounce window. The previous document is displayed until the new parse completes.
+
 ## Public API
 
 ```kotlin
@@ -145,7 +160,7 @@ data class OrcaParseResult(
 )
 ```
 
-## Supported Syntax (`0.6.5`)
+## Supported Syntax (`0.7.0`)
 
 ### Blocks
 
@@ -309,7 +324,7 @@ For release-like check:
 
 ## Versioning
 
-- Stable releases use plain semver tags like `0.6.5`
+- Stable releases use plain semver tags like `0.7.0`
 - Pre-releases use `-alpha`, `-beta`, `-rc`
 - Maven Central artifacts are immutable after publish
 
