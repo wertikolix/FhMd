@@ -22,6 +22,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.wertik.orca.core.OrcaBlock
 import ru.wertik.orca.core.OrcaDocument
+import ru.wertik.orca.core.OrcaParseError
 import ru.wertik.orca.core.OrcaParseDiagnostics
 import ru.wertik.orca.core.OrcaParser
 
@@ -57,6 +58,7 @@ fun Orca(
         parserKey,
         parseCacheKey,
     ) {
+        var parseError: Throwable? = null
         val parsedResult = try {
             withContext(Dispatchers.Default) {
                 if (parseCacheKey == null) {
@@ -72,6 +74,7 @@ fun Orca(
             throw cancellation
         } catch (error: Throwable) {
             println("W/$PARSE_LOG_TAG: failed to parse markdown, using previous document: ${error.message}")
+            parseError = error
             null
         }
 
@@ -83,7 +86,15 @@ fun Orca(
         } else {
             parsedResult.document
         }
-        onParseDiagnostics?.invoke(parsedResult?.diagnostics ?: OrcaParseDiagnostics())
+        onParseDiagnostics?.invoke(
+            parsedResult?.diagnostics ?: OrcaParseDiagnostics(
+                errors = listOf(
+                    OrcaParseError.ParserFailure(
+                        message = parseError?.message ?: "Unknown parse failure",
+                    ),
+                ),
+            ),
+        )
 
         latestDocument = parsed
         value = parsed
