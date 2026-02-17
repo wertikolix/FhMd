@@ -93,7 +93,7 @@ private fun parseFrontMatterEntries(
         val trimmed = line.trim()
         if (trimmed.isEmpty()) return@forEach
         if (trimmed.startsWith("#")) return@forEach
-        if (format == FrontMatterFormat.YAML && trimmed.startsWith("-")) return@forEach
+        if (format == FrontMatterFormat.YAML && trimmed.startsWith("- ")) return@forEach
 
         val separatorIndex = trimmed.indexOf(separator)
         if (separatorIndex <= 0) return@forEach
