@@ -8,16 +8,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ru.wertik.orca.core.OrcaBlock
@@ -27,6 +28,7 @@ import ru.wertik.orca.core.OrcaParseDiagnostics
 import ru.wertik.orca.core.OrcaParser
 
 private const val PARSE_LOG_TAG = "Orca"
+private const val DEFAULT_STREAMING_DEBOUNCE_MS = 80L
 
 private val defaultStyle: OrcaStyle = OrcaStyle()
 private val noOpLinkClick: (String) -> Unit = {}
@@ -47,17 +49,17 @@ fun Orca(
     securityPolicy: OrcaSecurityPolicy = OrcaSecurityPolicies.Default,
     onLinkClick: (String) -> Unit = noOpLinkClick,
     onParseDiagnostics: ((OrcaParseDiagnostics) -> Unit)? = null,
+    streamingDebounceMs: Long = DEFAULT_STREAMING_DEBOUNCE_MS,
 ) {
     val parserKey = remember(parser) { parser.cacheKey() }
     val emptyDocument = remember { OrcaDocument(emptyList()) }
-    var latestDocument by remember(parserKey) { mutableStateOf(emptyDocument) }
+    var document by remember(parserKey) { mutableStateOf(emptyDocument) }
 
-    val document by produceState(
-        initialValue = latestDocument,
-        markdown,
-        parserKey,
-        parseCacheKey,
-    ) {
+    LaunchedEffect(markdown, parserKey, parseCacheKey) {
+        if (streamingDebounceMs > 0) {
+            delay(streamingDebounceMs)
+        }
+
         var parseError: Throwable? = null
         val parsedResult = try {
             withContext(Dispatchers.Default) {
@@ -82,7 +84,7 @@ fun Orca(
             if (parsedResult?.diagnostics?.hasErrors == true) {
                 println("W/$PARSE_LOG_TAG: parser reported errors, using previous document")
             }
-            latestDocument
+            document
         } else {
             parsedResult.document
         }
@@ -96,8 +98,7 @@ fun Orca(
             ),
         )
 
-        latestDocument = parsed
-        value = parsed
+        document = parsed
     }
 
     Orca(
