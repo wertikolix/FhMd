@@ -29,3 +29,14 @@ internal fun hasAllowedScheme(
     if (!scheme.all { it.isLetter() }) return false
     return scheme in allowedSchemes
 }
+
+internal fun isRelativeUrl(value: String): Boolean {
+    val trimmed = value.trim()
+    if (trimmed.isEmpty()) return false
+    // scheme-relative (//host/path) is not relative
+    if (trimmed.startsWith("//")) return false
+    // has a scheme (e.g. http:, javascript:) — not relative
+    val colonIndex = trimmed.indexOf(':')
+    if (colonIndex > 0 && trimmed.substring(0, colonIndex).all { it.isLetter() }) return false
+    return true
+}

@@ -30,13 +30,17 @@ object OrcaSecurityPolicies {
     fun byAllowedSchemes(
         linkSchemes: Set<String> = DEFAULT_SAFE_LINK_SCHEMES,
         imageSchemes: Set<String> = DEFAULT_SAFE_IMAGE_SCHEMES,
+        allowRelativeLinks: Boolean = false,
+        allowRelativeImages: Boolean = false,
     ): OrcaSecurityPolicy {
         val normalizedLinkSchemes = linkSchemes.mapTo(linkedSetOf()) { it.lowercase() }
         val normalizedImageSchemes = imageSchemes.mapTo(linkedSetOf()) { it.lowercase() }
         return OrcaSecurityPolicy { type, value ->
             when (type) {
                 OrcaUrlType.LINK -> hasAllowedScheme(value, normalizedLinkSchemes)
+                    || (allowRelativeLinks && isRelativeUrl(value))
                 OrcaUrlType.IMAGE -> hasAllowedScheme(value, normalizedImageSchemes)
+                    || (allowRelativeImages && isRelativeUrl(value))
             }
         }
     }
