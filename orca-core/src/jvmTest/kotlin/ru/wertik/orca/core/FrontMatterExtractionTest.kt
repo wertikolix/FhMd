@@ -28,7 +28,7 @@ class FrontMatterExtractionTest {
     }
 
     @Test
-    fun `yaml front matter closed with ... alternative delimiter`() {
+    fun `yaml front matter closed with alternative dot delimiter`() {
         val input = "---\nauthor: Alice\n...\n\nContent here."
         val result = extractFrontMatter(input)
 
