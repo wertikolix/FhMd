@@ -1,6 +1,7 @@
 package ru.wertik.orca.core
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -35,5 +36,36 @@ class OrcaParserTest {
         assertTrue(result.document.blocks.isEmpty())
         assertTrue(result.diagnostics.warnings.isEmpty())
         assertTrue(result.diagnostics.errors.isEmpty())
+    }
+
+    @Test
+    fun defaultParseCachedWithDiagnosticsDoesNotCache() {
+        val parser = OrcaParser { input ->
+            OrcaDocument(
+                blocks = listOf(OrcaBlock.Paragraph(content = listOf(OrcaInline.Text(input)))),
+            )
+        }
+
+        val first = parser.parseCachedWithDiagnostics("key", "hello")
+        val second = parser.parseCachedWithDiagnostics("key", "hello")
+
+        // Default implementation does not cache — returns new instances each time
+        assertEquals(first.document, second.document)
+        assertFalse(first === second)
+    }
+
+    @Test
+    fun defaultParseCachedDoesNotCache() {
+        val parser = OrcaParser { input ->
+            OrcaDocument(
+                blocks = listOf(OrcaBlock.Paragraph(content = listOf(OrcaInline.Text(input)))),
+            )
+        }
+
+        val first = parser.parseCached("key", "hello")
+        val second = parser.parseCached("key", "hello")
+
+        assertEquals(first, second)
+        assertFalse(first === second)
     }
 }
