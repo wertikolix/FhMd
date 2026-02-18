@@ -2,6 +2,7 @@ package ru.wertik.orca.core
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class OrcaStreamingParserTest {
@@ -114,5 +115,24 @@ class OrcaStreamingParserTest {
             // Should never throw, always return a result
             assertTrue(result.document.blocks.size >= 0)
         }
+    }
+
+    @Test
+    fun cacheSizeEvictsOldestEntryWhenFull() {
+        val smallCacheParser = OrcaMarkdownParser(cacheSize = 2)
+        val key1 = "k1"
+        val key2 = "k2"
+        val key3 = "k3"
+
+        // Fill cache: key1 is oldest, then key2
+        val doc1 = smallCacheParser.parseCached(key1, "# One")
+        smallCacheParser.parseCached(key2, "# Two")
+        // Adding key3 evicts key1 (LRU)
+        smallCacheParser.parseCached(key3, "# Three")
+
+        // key1 was evicted — re-parsing gives equal but not same instance
+        val doc1Again = smallCacheParser.parseCached(key1, "# One")
+        assertEquals(doc1, doc1Again)
+        assertFalse(doc1 === doc1Again)
     }
 }
