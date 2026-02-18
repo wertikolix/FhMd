@@ -199,3 +199,69 @@ class MarkdownUrlSafetyTest {
         assertFalse(isSafeImageSource(""))
     }
 }
+
+class OrcaSecurityPoliciesByAllowedSchemesTest {
+
+    @Test
+    fun byAllowedSchemesAllowsCustomLinkScheme() {
+        val policy = OrcaSecurityPolicies.byAllowedSchemes(linkSchemes = setOf("ftp", "https"))
+        assertTrue(policy.isAllowed(OrcaUrlType.LINK, "ftp://files.example.com"))
+        assertFalse(policy.isAllowed(OrcaUrlType.LINK, "http://example.com"))
+    }
+
+    @Test
+    fun byAllowedSchemesAllowsCustomImageScheme() {
+        val policy = OrcaSecurityPolicies.byAllowedSchemes(imageSchemes = setOf("data", "https"))
+        assertTrue(policy.isAllowed(OrcaUrlType.IMAGE, "data:image/png;base64,abc"))
+        assertFalse(policy.isAllowed(OrcaUrlType.IMAGE, "http://example.com/img.png"))
+    }
+
+    @Test
+    fun byAllowedSchemesAllowsRelativeLinksWhenEnabled() {
+        val policy = OrcaSecurityPolicies.byAllowedSchemes(allowRelativeLinks = true)
+        assertTrue(policy.isAllowed(OrcaUrlType.LINK, "relative/path"))
+        assertTrue(policy.isAllowed(OrcaUrlType.LINK, "/root/page"))
+        assertTrue(policy.isAllowed(OrcaUrlType.LINK, "#anchor"))
+    }
+
+    @Test
+    fun byAllowedSchemesBlocksRelativeLinksWhenDisabled() {
+        val policy = OrcaSecurityPolicies.byAllowedSchemes(allowRelativeLinks = false)
+        assertFalse(policy.isAllowed(OrcaUrlType.LINK, "relative/path"))
+        assertFalse(policy.isAllowed(OrcaUrlType.LINK, "/root/page"))
+    }
+
+    @Test
+    fun byAllowedSchemesAllowsRelativeImagesWhenEnabled() {
+        val policy = OrcaSecurityPolicies.byAllowedSchemes(allowRelativeImages = true)
+        assertTrue(policy.isAllowed(OrcaUrlType.IMAGE, "images/photo.png"))
+        assertTrue(policy.isAllowed(OrcaUrlType.IMAGE, "/static/img.jpg"))
+    }
+
+    @Test
+    fun byAllowedSchemesBlocksRelativeImagesWhenDisabled() {
+        val policy = OrcaSecurityPolicies.byAllowedSchemes(allowRelativeImages = false)
+        assertFalse(policy.isAllowed(OrcaUrlType.IMAGE, "images/photo.png"))
+    }
+
+    @Test
+    fun byAllowedSchemesNormalizesSchemeInputToLowercase() {
+        val policy = OrcaSecurityPolicies.byAllowedSchemes(linkSchemes = setOf("HTTPS", "HTTP"))
+        assertTrue(policy.isAllowed(OrcaUrlType.LINK, "https://example.com"))
+        assertTrue(policy.isAllowed(OrcaUrlType.LINK, "http://example.com"))
+    }
+
+    @Test
+    fun byAllowedSchemesDoesNotAllowSchemeRelativeUrlAsRelative() {
+        val policy = OrcaSecurityPolicies.byAllowedSchemes(allowRelativeLinks = true)
+        // //host/path is scheme-relative, not relative — should NOT be allowed unless https/http is in schemes
+        assertFalse(policy.isAllowed(OrcaUrlType.LINK, "//cdn.example.com/img.png"))
+    }
+
+    @Test
+    fun byAllowedSchemesBlocksJavascriptEvenWithRelativeLinksEnabled() {
+        val policy = OrcaSecurityPolicies.byAllowedSchemes(allowRelativeLinks = true)
+        // javascript: has a scheme so it's not relative — blocked unless explicitly in linkSchemes
+        assertFalse(policy.isAllowed(OrcaUrlType.LINK, "javascript:alert(1)"))
+    }
+}
