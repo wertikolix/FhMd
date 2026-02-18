@@ -307,10 +307,17 @@ internal class IntellijTreeMapper(
 
         val withFootnotes = processFootnoteSyntax(raw, depth + 1)
             .mergeAdjacentText()
+        val withEmoji = withFootnotes.map { inline ->
+            if (inline is OrcaInline.Text) {
+                OrcaInline.Text(replaceEmojiShortcodes(inline.text))
+            } else {
+                inline
+            }
+        }
         val normalized = if (trimEdges) {
-            withFootnotes.trimEdgeWhitespace()
+            withEmoji.trimEdgeWhitespace()
         } else {
-            withFootnotes
+            withEmoji
         }
         return normalized.mergeAdjacentText()
     }
