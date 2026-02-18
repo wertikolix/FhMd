@@ -68,6 +68,35 @@ class OrcaInlineParserTest {
     }
 
     @Test
+    fun linkWithTitlePreservesTitleField() {
+        val result = parser.parse("[text](https://example.com \"My Title\")")
+        val paragraph = result.blocks.single() as OrcaBlock.Paragraph
+        val link = paragraph.content.filterIsInstance<OrcaInline.Link>().single()
+        assertEquals("My Title", link.title)
+    }
+
+    @Test
+    fun linkWithoutTitleHasNullTitle() {
+        val result = parser.parse("[text](https://example.com)")
+        val paragraph = result.blocks.single() as OrcaBlock.Paragraph
+        val link = paragraph.content.filterIsInstance<OrcaInline.Link>().single()
+        assertNull(link.title)
+    }
+
+    @Test
+    fun referenceLinkWithTitlePreservesTitle() {
+        val markdown = """
+            See [docs].
+            
+            [docs]: https://example.com "Reference Title"
+        """.trimIndent()
+        val result = parser.parse(markdown)
+        val paragraph = result.blocks.first() as OrcaBlock.Paragraph
+        val link = paragraph.content.filterIsInstance<OrcaInline.Link>().single()
+        assertEquals("Reference Title", link.title)
+    }
+
+    @Test
     fun linkWithEmptyDestinationHasEmptyString() {
         val result = parser.parse("[text]()")
         val paragraph = result.blocks.single() as OrcaBlock.Paragraph

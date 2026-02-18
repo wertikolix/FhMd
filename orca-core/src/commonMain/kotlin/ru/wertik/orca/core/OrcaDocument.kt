@@ -117,6 +117,7 @@ sealed interface OrcaInline {
     data class Link(
         val destination: String,
         val content: List<OrcaInline>,
+        val title: String? = null,
     ) : OrcaInline
 
     data class Image(

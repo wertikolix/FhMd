@@ -428,6 +428,7 @@ internal class IntellijTreeMapper(
         return OrcaInline.Link(
             destination = info.destination,
             content = content,
+            title = info.title?.takeIf { value -> value.isNotBlank() },
         )
     }
 
