@@ -330,11 +330,22 @@ private fun blockContentKey(block: OrcaBlock): String {
                 .orEmpty()
             "List:${if (block.ordered) "ol" else "ul"}:${block.items.size}:$firstItemDigest"
         }
-        is OrcaBlock.Quote -> "Quote:${block.blocks.size}"
-        is OrcaBlock.Table -> "Table:${block.header.size}x${block.rows.size}"
+        is OrcaBlock.Quote -> {
+            val firstBlockDigest = block.blocks.firstOrNull()
+                ?.let { first ->
+                    when (first) {
+                        is OrcaBlock.Paragraph -> inlineContentDigest(first.content)
+                        is OrcaBlock.Heading -> inlineContentDigest(first.content)
+                        else -> first::class.simpleName.orEmpty()
+                    }
+                }
+                .orEmpty()
+            "Quote:${block.blocks.size}:$firstBlockDigest"
+        }
+        is OrcaBlock.Table -> "Table:${block.header.size}x${block.rows.size}:${block.header.firstOrNull()?.content?.let { inlineContentDigest(it) }.orEmpty()}"
         is OrcaBlock.Image -> "Img:${block.source.take(64)}"
         is OrcaBlock.ThematicBreak -> "HR"
-        is OrcaBlock.Footnotes -> "FN:${block.definitions.size}"
+        is OrcaBlock.Footnotes -> "FN:${block.definitions.size}:${block.definitions.firstOrNull()?.label.orEmpty()}"
         is OrcaBlock.HtmlBlock -> "Html:${block.html.take(32).hashCode()}"
     }
 }
