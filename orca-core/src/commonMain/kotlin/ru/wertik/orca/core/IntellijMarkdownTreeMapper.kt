@@ -305,8 +305,7 @@ internal class IntellijTreeMapper(
             index += 1
         }
 
-        val mergedRaw = raw.mergeAdjacentText()
-        val withFootnotes = processFootnoteSyntax(mergedRaw, depth + 1)
+        val withFootnotes = processFootnoteSyntax(raw, depth + 1)
             .mergeAdjacentText()
         val normalized = if (trimEdges) {
             withFootnotes.trimEdgeWhitespace()
