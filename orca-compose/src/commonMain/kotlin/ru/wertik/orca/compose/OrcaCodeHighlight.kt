@@ -93,9 +93,11 @@ private fun detectHighlights(
     addMatches(NUMBER_REGEX, style.code.highlightNumber)
 
     val keywords = keywordsFor(language)
+    val isCaseInsensitiveKeywords = language == "sql"
     if (keywords.isNotEmpty()) {
         WORD_REGEX.findAll(code).forEach { match ->
-            if (match.value !in keywords) return@forEach
+            val matchValue = if (isCaseInsensitiveKeywords) match.value.lowercase() else match.value
+            if (matchValue !in keywords) return@forEach
             val range = match.range
             if (range.last >= code.length) return@forEach
             val start = range.first

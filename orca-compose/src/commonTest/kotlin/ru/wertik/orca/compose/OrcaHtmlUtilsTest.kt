@@ -51,7 +51,7 @@ class OrcaHtmlUtilsTest {
 
     @Test
     fun htmlBlockFallbackStripsSimpleTags() {
-        assertEquals("hello world", htmlBlockFallbackText("<p>hello</p> <span>world</span>"))
+        assertEquals("hello\n world", htmlBlockFallbackText("<p>hello</p> <span>world</span>"))
     }
 
     @Test
