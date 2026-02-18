@@ -110,6 +110,14 @@ sealed interface OrcaInline {
         val content: List<OrcaInline>,
     ) : OrcaInline
 
+    data class Superscript(
+        val content: List<OrcaInline>,
+    ) : OrcaInline
+
+    data class Subscript(
+        val content: List<OrcaInline>,
+    ) : OrcaInline
+
     data class InlineCode(
         val code: String,
     ) : OrcaInline

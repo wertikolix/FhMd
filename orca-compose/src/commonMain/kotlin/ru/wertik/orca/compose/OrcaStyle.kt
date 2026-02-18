@@ -54,6 +54,14 @@ data class OrcaInlineStyle(
         fontSize = 12.sp,
         color = Color(0xFF455A64),
     ),
+    val superscript: SpanStyle = SpanStyle(
+        baselineShift = BaselineShift.Superscript,
+        fontSize = 12.sp,
+    ),
+    val subscript: SpanStyle = SpanStyle(
+        baselineShift = BaselineShift.Subscript,
+        fontSize = 12.sp,
+    ),
 )
 
 data class OrcaLayoutStyle(

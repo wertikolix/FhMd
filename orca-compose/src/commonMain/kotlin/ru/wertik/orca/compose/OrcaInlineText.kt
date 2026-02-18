@@ -152,6 +152,28 @@ private fun AnnotatedString.Builder.appendInline(
             }
         }
 
+        is OrcaInline.Superscript -> withStyle(style = style.inline.superscript) {
+            appendInlines(
+                inlines = inline.content,
+                style = style,
+                onLinkClick = onLinkClick,
+                securityPolicy = securityPolicy,
+                footnoteNumbers = footnoteNumbers,
+                onFootnoteClick = onFootnoteClick,
+            )
+        }
+
+        is OrcaInline.Subscript -> withStyle(style = style.inline.subscript) {
+            appendInlines(
+                inlines = inline.content,
+                style = style,
+                onLinkClick = onLinkClick,
+                securityPolicy = securityPolicy,
+                footnoteNumbers = footnoteNumbers,
+                onFootnoteClick = onFootnoteClick,
+            )
+        }
+
         is OrcaInline.HtmlInline -> append(htmlInlineFallbackText(inline.html))
     }
 }

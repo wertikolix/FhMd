@@ -314,10 +314,11 @@ internal class IntellijTreeMapper(
                 inline
             }
         }
+        val withSuperSub = processSuperSubScript(withEmoji)
         val normalized = if (trimEdges) {
-            withEmoji.trimEdgeWhitespace()
+            withSuperSub.trimEdgeWhitespace()
         } else {
-            withEmoji
+            withSuperSub
         }
         return normalized.mergeAdjacentText()
     }
@@ -748,6 +749,42 @@ internal class IntellijTreeMapper(
         return true
     }
 
+    private fun processSuperSubScript(inlines: List<OrcaInline>): List<OrcaInline> {
+        return inlines.flatMap { inline ->
+            when (inline) {
+                is OrcaInline.Text -> parseSuperSubFromText(inline.text)
+                is OrcaInline.Bold -> listOf(inline.copy(content = processSuperSubScript(inline.content)))
+                is OrcaInline.Italic -> listOf(inline.copy(content = processSuperSubScript(inline.content)))
+                is OrcaInline.Link -> listOf(inline.copy(content = processSuperSubScript(inline.content)))
+                else -> listOf(inline)
+            }
+        }
+    }
+
+    private fun parseSuperSubFromText(text: String): List<OrcaInline> {
+        // Match ^text^ for superscript and ~text~ for subscript (single delimiters only)
+        val regex = Regex("""(?<!\^)\^([^\^]+)\^(?!\^)|(?<!~)~([^~]+)~(?!~)""")
+        val result = mutableListOf<OrcaInline>()
+        var lastEnd = 0
+        for (match in regex.findAll(text)) {
+            if (match.range.first > lastEnd) {
+                result += OrcaInline.Text(text.substring(lastEnd, match.range.first))
+            }
+            val supContent = match.groupValues[1]
+            val subContent = match.groupValues[2]
+            if (supContent.isNotEmpty()) {
+                result += OrcaInline.Superscript(content = listOf(OrcaInline.Text(supContent)))
+            } else if (subContent.isNotEmpty()) {
+                result += OrcaInline.Subscript(content = listOf(OrcaInline.Text(subContent)))
+            }
+            lastEnd = match.range.last + 1
+        }
+        if (lastEnd < text.length) {
+            result += OrcaInline.Text(text.substring(lastEnd))
+        }
+        return if (result.isEmpty()) listOf(OrcaInline.Text(text)) else result
+    }
+
     private fun isDepthExceeded(depth: Int): Boolean {
         if (depth <= maxTreeDepth) {
             return false
@@ -925,6 +962,8 @@ private fun List<OrcaInline>.toPlainText(): String {
                 is OrcaInline.Link -> append(inline.content.toPlainText().ifEmpty { inline.destination })
                 is OrcaInline.Image -> append(inline.alt ?: "")
                 is OrcaInline.FootnoteReference -> append("[${inline.label}]")
+                is OrcaInline.Superscript -> append(inline.content.toPlainText())
+                is OrcaInline.Subscript -> append(inline.content.toPlainText())
                 is OrcaInline.HtmlInline -> append(htmlInlineToPlainText(inline.html))
             }
         }
