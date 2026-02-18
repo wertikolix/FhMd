@@ -103,4 +103,109 @@ class OrcaTableLayoutTest {
         assertTrue(lengths[0] >= "value [1]".length)
         assertTrue(lengths[1] >= "longer-name".length)
     }
+
+    @Test
+    fun zeroColumnCountReturnsEmptyWidthList() {
+        val widths = computeTableColumnWidths(
+            columnCount = 0,
+            contentLengths = emptyList(),
+            tableStyle = OrcaTableStyle(),
+            availableWidth = 400.dp,
+        )
+
+        assertTrue(widths.isEmpty())
+    }
+
+    @Test
+    fun singleColumnAutoModeRespectsBounds() {
+        val widths = computeTableColumnWidths(
+            columnCount = 1,
+            contentLengths = listOf(50),
+            tableStyle = OrcaTableStyle(
+                layoutMode = OrcaTableLayoutMode.AUTO,
+                minColumnWidth = 80.dp,
+                maxColumnWidth = 300.dp,
+                autoColumnCharacterWidth = 7.dp,
+                fillAvailableWidth = false,
+            ),
+            availableWidth = null,
+        )
+
+        assertEquals(1, widths.size)
+        assertTrue(widths[0] >= 80.dp)
+        assertTrue(widths[0] <= 300.dp)
+    }
+
+    @Test
+    fun autoModeWithNoAvailableWidthDoesNotStretch() {
+        val widths = computeTableColumnWidths(
+            columnCount = 2,
+            contentLengths = listOf(3, 3),
+            tableStyle = OrcaTableStyle(
+                layoutMode = OrcaTableLayoutMode.AUTO,
+                minColumnWidth = 50.dp,
+                maxColumnWidth = 200.dp,
+                autoColumnCharacterWidth = 7.dp,
+                fillAvailableWidth = true,
+            ),
+            availableWidth = null,
+        )
+
+        // fillAvailableWidth = true but no availableWidth — no stretching occurs
+        assertEquals(2, widths.size)
+        widths.forEach { width ->
+            assertTrue(width >= 50.dp)
+            assertTrue(width <= 200.dp)
+        }
+    }
+
+    @Test
+    fun autoModeWithFillDisabledDoesNotStretchToAvailableWidth() {
+        val widths = computeTableColumnWidths(
+            columnCount = 2,
+            contentLengths = listOf(3, 3),
+            tableStyle = OrcaTableStyle(
+                layoutMode = OrcaTableLayoutMode.AUTO,
+                minColumnWidth = 50.dp,
+                maxColumnWidth = 200.dp,
+                autoColumnCharacterWidth = 7.dp,
+                fillAvailableWidth = false,
+            ),
+            availableWidth = 500.dp,
+        )
+
+        // fillAvailableWidth = false — total should NOT equal availableWidth
+        assertTrue(widths[0] + widths[1] < 500.dp)
+    }
+
+    @Test
+    fun contentLengthsForEmptyTableReturnMinimumValues() {
+        val table = OrcaBlock.Table(
+            header = emptyList(),
+            rows = emptyList(),
+        )
+
+        val lengths = tableContentLengths(table, columnCount = 3)
+
+        assertEquals(3, lengths.size)
+        lengths.forEach { length -> assertTrue(length >= 1) }
+    }
+
+    @Test
+    fun contentLengthsAccountForBoldInlineLength() {
+        val table = OrcaBlock.Table(
+            header = listOf(
+                OrcaTableCell(
+                    content = listOf(OrcaInline.Bold(content = listOf(OrcaInline.Text("important")))),
+                    alignment = null,
+                ),
+            ),
+            rows = emptyList(),
+        )
+
+        val lengths = tableContentLengths(table, columnCount = 1)
+
+        assertEquals(1, lengths.size)
+        assertTrue(lengths[0] >= "important".length)
+    }
 }
