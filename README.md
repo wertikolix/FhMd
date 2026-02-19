@@ -7,8 +7,8 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ## Status
 
-- Current stable minor: `0.7.5`
-- Release notes: [`docs/releases/0.7.5.md`](docs/releases/0.7.5.md)
+- Current stable minor: `0.8.0`
+- Release notes: [`docs/releases/0.8.0.md`](docs/releases/0.8.0.md)
 - Maturity: lightweight production-ready core subset (Markdown-first)
 
 ## Why Orca
@@ -38,8 +38,8 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ```kotlin
 // Kotlin Multiplatform (commonMain)
-implementation("ru.wertik:orca-core:0.7.5")
-implementation("ru.wertik:orca-compose:0.7.5")
+implementation("ru.wertik:orca-core:0.8.0")
+implementation("ru.wertik:orca-compose:0.8.0")
 ```
 
 Gradle resolves platform-specific artifacts automatically (`orca-core-jvm`, `orca-compose-android`, etc.).
@@ -160,7 +160,7 @@ data class OrcaParseResult(
 )
 ```
 
-## Supported Syntax (`0.7.5`)
+## Supported Syntax (`0.8.0`)
 
 ### Blocks
 
@@ -174,8 +174,9 @@ data class OrcaParseResult(
 - thematic break (`---`)
 - standalone image block
 - GFM tables
-- HTML blocks (safe text fallback rendering)
+- HTML blocks (styled rendering with tag support)
 - footnote definitions
+- **admonitions / callouts** (`> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`)
 
 ### Inlines
 
@@ -183,13 +184,16 @@ data class OrcaParseResult(
 - bold
 - italic
 - strikethrough
+- **superscript** (`^text^`)
+- **subscript** (`~text~`)
 - inline code
-- link
-- inline image AST (rendered as fallback text inside inline flow)
-- inline HTML (safe text fallback rendering)
+- link (with title support)
+- **inline image rendering** (actual images in text flow via InlineTextContent)
+- inline HTML (styled rendering)
 - footnote references
 - inline footnotes `^[...]`
 - soft/hard line breaks (`\n`)
+- **emoji shortcodes** (`:smile:`, `:rocket:`, `:fire:`, etc.)
 
 ### GFM extensions enabled
 
@@ -218,6 +222,13 @@ data class OrcaParseResult(
   - tap reference marker (`[n]`) to jump to definition
   - tap backlink (`↩`) to return to source block
 
+### Admonition rendering
+
+- GitHub-style callout blocks: NOTE, TIP, IMPORTANT, WARNING, CAUTION
+- colored left stripe + icon + title
+- full content block rendering inside admonition
+- light and dark theme color presets
+
 ### Code block rendering
 
 - monospace typography
@@ -235,6 +246,13 @@ data class OrcaParseResult(
 - fallback fixed layout mode available via style
 - horizontal scroll remains for wide tables
 
+### HTML rendering
+
+- block-level HTML rendered with styled AnnotatedString
+- supported tags: `<b>`, `<i>`, `<s>`, `<u>`, `<code>`, `<a>`, `<sup>`, `<sub>`, `<mark>`, `<br>`, `<p>`, `<h1>`-`<h6>`, `<li>`, `<hr>`, `<blockquote>`, `<pre>`
+- HTML entities decoded (`&amp;`, `&lt;`, `&gt;`, `&quot;`, `&nbsp;`, etc.)
+- unknown tags gracefully stripped
+
 ## Styling
 
 Use `OrcaStyle` as a single configuration object:
@@ -247,6 +265,8 @@ Use `OrcaStyle` as a single configuration object:
 - `table`
 - `thematicBreak`
 - `image`
+- `inlineImage`
+- `admonition`
 
 Example:
 
@@ -324,7 +344,7 @@ For release-like check:
 
 ## Versioning
 
-- Stable releases use plain semver tags like `0.7.0`
+- Stable releases use plain semver tags like `0.8.0`
 - Pre-releases use `-alpha`, `-beta`, `-rc`
 - Maven Central artifacts are immutable after publish
 
