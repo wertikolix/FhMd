@@ -40,6 +40,12 @@ sealed interface OrcaBlock {
         val blocks: List<OrcaBlock>,
     ) : OrcaBlock
 
+    data class Admonition(
+        val type: OrcaAdmonitionType,
+        val title: String?,
+        val blocks: List<OrcaBlock>,
+    ) : OrcaBlock
+
     data class CodeBlock(
         val code: String,
         val language: String?,
@@ -86,6 +92,14 @@ enum class OrcaTableAlignment {
     LEFT,
     CENTER,
     RIGHT,
+}
+
+enum class OrcaAdmonitionType {
+    NOTE,
+    TIP,
+    IMPORTANT,
+    WARNING,
+    CAUTION,
 }
 
 data class OrcaFootnoteDefinition(

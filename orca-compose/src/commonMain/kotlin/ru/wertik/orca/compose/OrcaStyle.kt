@@ -144,6 +144,22 @@ data class OrcaImageStyle(
     val contentScale: ContentScale = ContentScale.Fit,
 )
 
+data class OrcaAdmonitionStyle(
+    val stripeWidth: Dp = 3.dp,
+    val spacing: Dp = 10.dp,
+    val titleStyle: TextStyle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+    val noteColor: Color = Color(0xFF1565C0),
+    val tipColor: Color = Color(0xFF2E7D32),
+    val importantColor: Color = Color(0xFF7B1FA2),
+    val warningColor: Color = Color(0xFFEF6C00),
+    val cautionColor: Color = Color(0xFFC62828),
+    val noteBackground: Color = Color(0x0D1565C0),
+    val tipBackground: Color = Color(0x0D2E7D32),
+    val importantBackground: Color = Color(0x0D7B1FA2),
+    val warningBackground: Color = Color(0x0DEF6C00),
+    val cautionBackground: Color = Color(0x0DC62828),
+)
+
 data class OrcaStyle(
     val typography: OrcaTypographyStyle = OrcaTypographyStyle(),
     val inline: OrcaInlineStyle = OrcaInlineStyle(),
@@ -153,6 +169,7 @@ data class OrcaStyle(
     val table: OrcaTableStyle = OrcaTableStyle(),
     val thematicBreak: OrcaThematicBreakStyle = OrcaThematicBreakStyle(),
     val image: OrcaImageStyle = OrcaImageStyle(),
+    val admonition: OrcaAdmonitionStyle = OrcaAdmonitionStyle(),
 ) {
     fun heading(level: Int): TextStyle = typography.heading(level)
 
@@ -288,6 +305,18 @@ object OrcaDefaults {
         ),
         image = OrcaImageStyle(
             background = Color(0xFF252525),
+        ),
+        admonition = OrcaAdmonitionStyle(
+            noteColor = Color(0xFF64B5F6),
+            tipColor = Color(0xFF81C784),
+            importantColor = Color(0xFFCE93D8),
+            warningColor = Color(0xFFFFB74D),
+            cautionColor = Color(0xFFEF9A9A),
+            noteBackground = Color(0x1A64B5F6),
+            tipBackground = Color(0x1A81C784),
+            importantBackground = Color(0x1ACE93D8),
+            warningBackground = Color(0x1AFFB74D),
+            cautionBackground = Color(0x1AEF9A9A),
         ),
     )
 }

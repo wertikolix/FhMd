@@ -347,6 +347,7 @@ private fun blockContentKey(block: OrcaBlock): String {
         is OrcaBlock.ThematicBreak -> "HR"
         is OrcaBlock.Footnotes -> "FN:${block.definitions.size}:${block.definitions.firstOrNull()?.label.orEmpty()}"
         is OrcaBlock.HtmlBlock -> "Html:${block.html.take(32).hashCode()}"
+        is OrcaBlock.Admonition -> "Adm:${block.type.name}:${block.blocks.size}"
     }
 }
 

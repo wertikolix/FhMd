@@ -36,6 +36,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import ru.wertik.orca.core.OrcaAdmonitionType
 import ru.wertik.orca.core.OrcaBlock
 import ru.wertik.orca.core.OrcaTaskState
 
@@ -134,6 +135,18 @@ internal fun OrcaBlockNode(
         is OrcaBlock.HtmlBlock -> HtmlBlockNode(
             block = block,
             style = style,
+        )
+
+        is OrcaBlock.Admonition -> AdmonitionNode(
+            block = block,
+            style = style,
+            onLinkClick = onLinkClick,
+            securityPolicy = securityPolicy,
+            footnoteNumbers = footnoteNumbers,
+            sourceBlockKey = sourceBlockKey,
+            activeFootnoteLabel = activeFootnoteLabel,
+            onFootnoteReferenceClick = onFootnoteReferenceClick,
+            onFootnoteBackClick = onFootnoteBackClick,
         )
     }
 }
@@ -513,6 +526,82 @@ private fun CopyButton(
             }
             .padding(style.code.languageLabelPadding),
     )
+}
+
+@Composable
+private fun AdmonitionNode(
+    block: OrcaBlock.Admonition,
+    style: OrcaStyle,
+    onLinkClick: (String) -> Unit,
+    securityPolicy: OrcaSecurityPolicy,
+    footnoteNumbers: Map<String, Int>,
+    sourceBlockKey: String,
+    activeFootnoteLabel: String?,
+    onFootnoteReferenceClick: (label: String, sourceBlockKey: String) -> Unit,
+    onFootnoteBackClick: (label: String) -> Unit,
+) {
+    val admonitionStyle = style.admonition
+    val color = when (block.type) {
+        OrcaAdmonitionType.NOTE -> admonitionStyle.noteColor
+        OrcaAdmonitionType.TIP -> admonitionStyle.tipColor
+        OrcaAdmonitionType.IMPORTANT -> admonitionStyle.importantColor
+        OrcaAdmonitionType.WARNING -> admonitionStyle.warningColor
+        OrcaAdmonitionType.CAUTION -> admonitionStyle.cautionColor
+    }
+    val background = when (block.type) {
+        OrcaAdmonitionType.NOTE -> admonitionStyle.noteBackground
+        OrcaAdmonitionType.TIP -> admonitionStyle.tipBackground
+        OrcaAdmonitionType.IMPORTANT -> admonitionStyle.importantBackground
+        OrcaAdmonitionType.WARNING -> admonitionStyle.warningBackground
+        OrcaAdmonitionType.CAUTION -> admonitionStyle.cautionBackground
+    }
+    val icon = when (block.type) {
+        OrcaAdmonitionType.NOTE -> "\u2139\uFE0F"
+        OrcaAdmonitionType.TIP -> "\uD83D\uDCA1"
+        OrcaAdmonitionType.IMPORTANT -> "\u2757"
+        OrcaAdmonitionType.WARNING -> "\u26A0\uFE0F"
+        OrcaAdmonitionType.CAUTION -> "\uD83D\uDED1"
+    }
+    val title = block.title ?: block.type.name.lowercase().replaceFirstChar { it.uppercase() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min),
+    ) {
+        Box(
+            modifier = Modifier
+                .width(admonitionStyle.stripeWidth)
+                .fillMaxHeight()
+                .background(color),
+        )
+        Spacer(modifier = Modifier.width(admonitionStyle.spacing))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(background)
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(style.layout.nestedBlockSpacing),
+        ) {
+            Text(
+                text = "$icon $title",
+                style = admonitionStyle.titleStyle.copy(color = color),
+            )
+            block.blocks.forEach { childBlock ->
+                OrcaBlockNode(
+                    block = childBlock,
+                    style = style,
+                    onLinkClick = onLinkClick,
+                    securityPolicy = securityPolicy,
+                    footnoteNumbers = footnoteNumbers,
+                    sourceBlockKey = sourceBlockKey,
+                    activeFootnoteLabel = activeFootnoteLabel,
+                    onFootnoteReferenceClick = onFootnoteReferenceClick,
+                    onFootnoteBackClick = onFootnoteBackClick,
+                )
+            }
+        }
+    }
 }
 
 @Composable

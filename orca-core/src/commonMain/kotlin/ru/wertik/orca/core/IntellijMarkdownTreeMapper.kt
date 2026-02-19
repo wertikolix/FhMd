@@ -59,10 +59,10 @@ internal class IntellijTreeMapper(
                 startNumber = node.extractOrderedListStart(source),
             )
 
-            MarkdownElementTypes.BLOCK_QUOTE -> OrcaBlock.Quote(
-                blocks = node.children
-                    .mapNotNull { child -> mapBlock(child, depth + 1) },
-            )
+            MarkdownElementTypes.BLOCK_QUOTE -> {
+                val blocks = node.children.mapNotNull { child -> mapBlock(child, depth + 1) }
+                tryMapAdmonition(blocks) ?: OrcaBlock.Quote(blocks = blocks)
+            }
 
             MarkdownElementTypes.CODE_FENCE -> mapCodeFence(node)
             MarkdownElementTypes.CODE_BLOCK -> mapIndentedCodeBlock(node)
@@ -71,6 +71,49 @@ internal class IntellijTreeMapper(
             MarkdownTokenTypes.HORIZONTAL_RULE -> OrcaBlock.ThematicBreak
             else -> mapHeading(node, depth + 1)
         }
+    }
+
+    private fun tryMapAdmonition(blocks: List<OrcaBlock>): OrcaBlock.Admonition? {
+        val firstParagraph = blocks.firstOrNull() as? OrcaBlock.Paragraph ?: return null
+        val firstText = firstParagraph.content.firstOrNull() as? OrcaInline.Text ?: return null
+        val text = firstText.text.trimStart()
+
+        val admonitionRegex = Regex("""^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)](.*)""", RegexOption.IGNORE_CASE)
+        val match = admonitionRegex.matchEntire(text) ?: return null
+
+        val typeName = match.groupValues[1].uppercase()
+        val type = OrcaAdmonitionType.valueOf(typeName)
+        val customTitle = match.groupValues[2].trim().takeIf { it.isNotEmpty() }
+
+        // Remove the admonition tag from the first paragraph
+        val remainingFirstInlines = firstParagraph.content.toMutableList()
+        // Check if there's content after the tag on the first text node
+        val afterTag = firstText.text.substringAfter(match.value)
+        remainingFirstInlines.removeAt(0) // remove the original first text
+
+        // If there are remaining inlines in the first paragraph (after the tag line)
+        // Check if the remaining content after removing tag text has meaningful content
+        val restOfFirstParagraph = if (remainingFirstInlines.isNotEmpty()) {
+            // There were more inlines after the text node with the tag
+            val filtered = remainingFirstInlines.dropWhile {
+                it is OrcaInline.Text && it.text == "\n"
+            }
+            if (filtered.isNotEmpty()) {
+                listOf(OrcaBlock.Paragraph(content = filtered))
+            } else {
+                emptyList()
+            }
+        } else {
+            emptyList()
+        }
+
+        val contentBlocks = restOfFirstParagraph + blocks.drop(1)
+
+        return OrcaBlock.Admonition(
+            type = type,
+            title = customTitle,
+            blocks = contentBlocks,
+        )
     }
 
     private fun mapHeading(node: ASTNode, depth: Int): OrcaBlock.Heading? {
