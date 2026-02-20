@@ -3,6 +3,17 @@ package ru.wertik.orca.core
 import org.intellij.markdown.parser.LinkMap
 import org.intellij.markdown.parser.MarkdownParser
 
+/**
+ * Default [OrcaParser] implementation backed by IntelliJ's markdown parser.
+ *
+ * Supports front matter extraction, footnotes, admonitions, and an LRU parse cache.
+ *
+ * @param parser Underlying IntelliJ [MarkdownParser]. Defaults to [defaultParser].
+ * @param maxTreeDepth Maximum allowed AST nesting depth. Defaults to [DEFAULT_MAX_TREE_DEPTH].
+ * @param onDepthLimitExceeded Optional callback invoked when nesting exceeds [maxTreeDepth].
+ * @param cacheSize Maximum number of cached parse results (LRU). Defaults to [DEFAULT_PARSE_CACHE_SIZE].
+ * @see OrcaParser
+ */
 class OrcaMarkdownParser(
     private val parser: MarkdownParser = defaultParser(),
     private val maxTreeDepth: Int = DEFAULT_MAX_TREE_DEPTH,
@@ -60,6 +71,7 @@ class OrcaMarkdownParser(
         )
     }
 
+    /** Evicts all entries from the parse cache. */
     fun clearCache() {
         cache.clear()
     }
