@@ -11,6 +11,13 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 - Release notes: [`docs/releases/0.8.0.md`](docs/releases/0.8.0.md)
 - Maturity: lightweight production-ready core subset (Markdown-first)
 
+## Documentation
+
+- [Architecture Overview](docs/architecture.md) -- module structure, parsing pipeline, rendering pipeline
+- [AST Reference](docs/ast-reference.md) -- complete list of all block and inline node types
+- [Style Guide](docs/style-guide.md) -- full reference for OrcaStyle configuration
+- [Cookbook](docs/cookbook.md) -- practical recipes for common use cases
+
 ## Why Orca
 
 - Small API surface
