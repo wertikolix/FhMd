@@ -1,18 +1,36 @@
 package ru.wertik.orca.compose
 
+/** Category of URL being checked by [OrcaSecurityPolicy]. */
 enum class OrcaUrlType {
+    /** Clickable link destination (e.g. `<a href="...">`). */
     LINK,
+    /** Image source URL (e.g. `<img src="...">`). */
     IMAGE,
 }
 
+/**
+ * Determines whether a URL is safe to render as a clickable link or loadable image.
+ *
+ * Unsafe URLs are rendered as plain text fallback instead of active elements.
+ * @see OrcaSecurityPolicies
+ */
 fun interface OrcaSecurityPolicy {
+    /**
+     * Returns `true` if the given [value] is allowed for the specified URL [type].
+     */
     fun isAllowed(
         type: OrcaUrlType,
         value: String,
     ): Boolean
 }
 
+/**
+ * Built-in security policy implementations.
+ *
+ * [Default] allows `http`, `https` for images and `http`, `https`, `mailto` for links.
+ */
 object OrcaSecurityPolicies {
+    /** Default policy: allows http/https links and images, plus mailto for links. */
     val Default: OrcaSecurityPolicy = OrcaSecurityPolicy { type, value ->
         when (type) {
             OrcaUrlType.LINK -> hasAllowedScheme(
@@ -27,6 +45,14 @@ object OrcaSecurityPolicies {
         }
     }
 
+    /**
+     * Creates a policy that allows URLs matching the given scheme sets.
+     *
+     * @param linkSchemes allowed schemes for links (default: http, https, mailto)
+     * @param imageSchemes allowed schemes for images (default: http, https)
+     * @param allowRelativeLinks if `true`, relative URLs are allowed for links
+     * @param allowRelativeImages if `true`, relative URLs are allowed for images
+     */
     fun byAllowedSchemes(
         linkSchemes: Set<String> = DEFAULT_SAFE_LINK_SCHEMES,
         imageSchemes: Set<String> = DEFAULT_SAFE_IMAGE_SCHEMES,

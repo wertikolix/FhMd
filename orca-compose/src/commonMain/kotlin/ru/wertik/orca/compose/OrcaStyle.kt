@@ -17,6 +17,14 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Text styles for headings (H1–H6) and body paragraphs.
+ *
+ * Defaults: heading sizes range from 30 sp (H1) down to 16 sp (H6);
+ * paragraph is 16 sp with 24 sp line height.
+ *
+ * @see OrcaStyle
+ */
 data class OrcaTypographyStyle(
     val heading1: TextStyle = TextStyle(fontSize = 30.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold),
     val heading2: TextStyle = TextStyle(fontSize = 26.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold),
@@ -38,6 +46,15 @@ data class OrcaTypographyStyle(
     }
 }
 
+/**
+ * [SpanStyle]s applied to inline Markdown elements.
+ *
+ * Defaults: monospace + semi-transparent background for inline code, blue underlined links,
+ * line-through for strikethrough, superscript for footnote references, and 12 sp for
+ * superscript/subscript.
+ *
+ * @see OrcaStyle
+ */
 data class OrcaInlineStyle(
     val inlineCode: SpanStyle = SpanStyle(
         fontFamily = FontFamily.Monospace,
@@ -65,18 +82,42 @@ data class OrcaInlineStyle(
     ),
 )
 
+/**
+ * Spacing and sizing for block-level layout.
+ *
+ * Defaults: 12 dp between top-level blocks, 8 dp inside nested blocks,
+ * 22 dp wide list marker column.
+ *
+ * @see OrcaStyle
+ */
 data class OrcaLayoutStyle(
     val blockSpacing: Dp = 12.dp,
     val nestedBlockSpacing: Dp = 8.dp,
     val listMarkerWidth: Dp = 22.dp,
 )
 
+/**
+ * Appearance of blockquote elements.
+ *
+ * Defaults: blue-grey stripe 3 dp wide with 10 dp spacing from content.
+ *
+ * @see OrcaStyle
+ */
 data class OrcaQuoteStyle(
     val stripeColor: Color = Color(0xFFB0BEC5),
     val stripeWidth: Dp = 3.dp,
     val spacing: Dp = 10.dp,
 )
 
+/**
+ * Appearance of fenced/indented code blocks, including syntax highlighting token styles.
+ *
+ * Defaults: 14 sp monospace text on a light grey (#F3F3F3) background with an 8 dp rounded
+ * border, line numbers enabled, copy button shown, and syntax highlighting enabled with
+ * keyword/string/comment/number token colours.
+ *
+ * @see OrcaStyle
+ */
 data class OrcaCodeBlockStyle(
     val text: TextStyle = TextStyle(
         fontSize = 14.sp,

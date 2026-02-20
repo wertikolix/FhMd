@@ -33,11 +33,40 @@ private const val DEFAULT_STREAMING_DEBOUNCE_MS = 80L
 private val defaultStyle: OrcaStyle = OrcaStyle()
 private val noOpLinkClick: (String) -> Unit = {}
 
+/**
+ * Root layout strategy for the Orca composable.
+ *
+ * @see Orca
+ */
 enum class OrcaRootLayout {
+    /** Uses a [LazyColumn] — efficient for long documents, renders items on demand. */
     LAZY_COLUMN,
+
+    /** Uses a plain [Column] — measures all blocks upfront, suitable for short content or nested scrollable containers. */
     COLUMN,
 }
 
+/**
+ * Renders Markdown text as Compose UI.
+ *
+ * Parses [markdown] using the supplied [parser] and renders the resulting document.
+ * Parsing is debounced to handle streaming / rapid updates efficiently.
+ * On first composition the parse is synchronous to avoid an empty-frame flash.
+ *
+ * @param markdown raw Markdown string to render.
+ * @param modifier [Modifier] applied to the root layout.
+ * @param parser [OrcaParser] implementation used to convert Markdown to an [OrcaDocument].
+ * @param parseCacheKey optional cache key passed to [OrcaParser.parseCached]; when `null`, caching is bypassed.
+ * @param style visual configuration for all rendered elements.
+ * @param rootLayout whether to use a [LazyColumn][OrcaRootLayout.LAZY_COLUMN] or a [Column][OrcaRootLayout.COLUMN].
+ * @param securityPolicy URL filter applied to links and images before rendering.
+ * @param onLinkClick callback invoked when a user taps a link.
+ * @param onParseDiagnostics optional callback receiving parse diagnostics (errors and warnings) after each parse.
+ * @param streamingDebounceMs debounce delay in milliseconds before re-parsing after [markdown] changes. Default is 80 ms.
+ * @see Orca
+ * @see OrcaStyle
+ * @see OrcaSecurityPolicy
+ */
 @Composable
 fun Orca(
     markdown: String,
@@ -129,6 +158,22 @@ fun Orca(
     )
 }
 
+/**
+ * Renders a pre-parsed [OrcaDocument] as Compose UI.
+ *
+ * Use this overload when you already have a parsed AST (e.g. from a custom parser pipeline
+ * or server-side pre-processing). For raw Markdown input, prefer the [Orca] overload that
+ * accepts a `String`.
+ *
+ * @param document pre-parsed Markdown AST to render.
+ * @param modifier [Modifier] applied to the root layout.
+ * @param style visual configuration for all rendered elements.
+ * @param rootLayout whether to use a [LazyColumn][OrcaRootLayout.LAZY_COLUMN] or a [Column][OrcaRootLayout.COLUMN].
+ * @param securityPolicy URL filter applied to links and images before rendering.
+ * @param onLinkClick callback invoked when a user taps a link.
+ * @see OrcaDocument
+ * @see OrcaStyle
+ */
 @Composable
 fun Orca(
     document: OrcaDocument,
