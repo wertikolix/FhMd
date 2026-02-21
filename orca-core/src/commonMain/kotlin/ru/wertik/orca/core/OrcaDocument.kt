@@ -285,4 +285,20 @@ sealed interface OrcaInline {
     data class HtmlInline(
         val html: String,
     ) : OrcaInline
+
+    /**
+     * Abbreviation with an expanded title.
+     *
+     * Syntax: `*[ABBR]: Full expansion`
+     *
+     * When the abbreviation text appears in document content, it is wrapped
+     * in this node so renderers can display a tooltip or underline.
+     *
+     * @property text The abbreviated text as it appears in the source.
+     * @property title The full expansion / definition of the abbreviation.
+     */
+    data class Abbreviation(
+        val text: String,
+        val title: String,
+    ) : OrcaInline
 }

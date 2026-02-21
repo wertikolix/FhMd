@@ -1008,6 +1008,7 @@ private fun List<OrcaInline>.toPlainText(): String {
                 is OrcaInline.Superscript -> append(inline.content.toPlainText())
                 is OrcaInline.Subscript -> append(inline.content.toPlainText())
                 is OrcaInline.HtmlInline -> append(htmlInlineToPlainText(inline.html))
+                is OrcaInline.Abbreviation -> append(inline.text)
             }
         }
     }

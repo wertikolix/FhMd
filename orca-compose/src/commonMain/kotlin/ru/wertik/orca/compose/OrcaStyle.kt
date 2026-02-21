@@ -80,6 +80,10 @@ data class OrcaInlineStyle(
         baselineShift = BaselineShift.Subscript,
         fontSize = 12.sp,
     ),
+    val abbreviation: SpanStyle = SpanStyle(
+        textDecoration = TextDecoration.Underline,
+        background = Color(0x0A000000),
+    ),
 )
 
 /**
@@ -328,6 +332,10 @@ object OrcaDefaults {
                 baselineShift = BaselineShift.Superscript,
                 fontSize = 12.sp,
                 color = Color(0xFF90A4AE),
+            ),
+            abbreviation = SpanStyle(
+                textDecoration = TextDecoration.Underline,
+                background = Color(0x0DFFFFFF),
             ),
         ),
         quote = OrcaQuoteStyle(

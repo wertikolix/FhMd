@@ -421,6 +421,7 @@ private fun StringBuilder.appendInlineText(inline: ru.wertik.orca.core.OrcaInlin
         is ru.wertik.orca.core.OrcaInline.HtmlInline -> append(inline.html)
         is ru.wertik.orca.core.OrcaInline.Superscript -> inline.content.forEach { appendInlineText(it) }
         is ru.wertik.orca.core.OrcaInline.Subscript -> inline.content.forEach { appendInlineText(it) }
+        is ru.wertik.orca.core.OrcaInline.Abbreviation -> append(inline.text)
     }
 }
 

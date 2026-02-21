@@ -181,6 +181,10 @@ private fun AnnotatedString.Builder.appendInline(
                 append(plainText)
             }
         }
+
+        is OrcaInline.Abbreviation -> withStyle(style = style.inline.abbreviation) {
+            append(inline.text)
+        }
     }
 }
 

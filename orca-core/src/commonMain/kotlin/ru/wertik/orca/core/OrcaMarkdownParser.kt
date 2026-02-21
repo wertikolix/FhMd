@@ -78,7 +78,8 @@ class OrcaMarkdownParser(
 
     private fun parseInternal(input: String): OrcaParseResult {
         val frontMatterExtraction = extractFrontMatter(input)
-        val definitionListExtraction = extractDefinitionLists(frontMatterExtraction.markdown)
+        val abbreviationExtraction = extractAbbreviations(frontMatterExtraction.markdown)
+        val definitionListExtraction = extractDefinitionLists(abbreviationExtraction.markdown)
         val footnoteExtraction = extractFootnoteDefinitions(definitionListExtraction.markdown)
         val root = parser.buildMarkdownTreeFromString(footnoteExtraction.markdown)
         val depthLimitReporter = DepthLimitReporter(onDepthLimitExceeded)
@@ -135,6 +136,9 @@ class OrcaMarkdownParser(
             resolvedBlocks += OrcaBlock.Footnotes(definitions = allFootnotes)
         }
 
+        // Apply abbreviation replacements to inline content.
+        val finalBlocks = applyAbbreviations(resolvedBlocks, abbreviationExtraction.abbreviations)
+
         val warnings = buildList {
             val exceededDepth = depthLimitReporter.exceededDepth()
             if (exceededDepth != null) {
@@ -149,7 +153,7 @@ class OrcaMarkdownParser(
 
         return OrcaParseResult(
             document = OrcaDocument(
-                blocks = resolvedBlocks,
+                blocks = finalBlocks,
                 frontMatter = frontMatterExtraction.frontMatter,
             ),
             diagnostics = OrcaParseDiagnostics(
