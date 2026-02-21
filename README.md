@@ -7,8 +7,8 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ## Status
 
-- Current stable minor: `0.8.0`
-- Release notes: [`docs/releases/0.8.0.md`](docs/releases/0.8.0.md)
+- Current stable minor: `0.8.1`
+- Release notes: [`docs/releases/0.8.1.md`](docs/releases/0.8.1.md)
 - Maturity: lightweight production-ready core subset (Markdown-first)
 
 ## Documentation
@@ -45,8 +45,8 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ```kotlin
 // Kotlin Multiplatform (commonMain)
-implementation("ru.wertik:orca-core:0.8.0")
-implementation("ru.wertik:orca-compose:0.8.0")
+implementation("ru.wertik:orca-core:0.8.1")
+implementation("ru.wertik:orca-compose:0.8.1")
 ```
 
 Gradle resolves platform-specific artifacts automatically (`orca-core-jvm`, `orca-compose-android`, etc.).
@@ -167,7 +167,7 @@ data class OrcaParseResult(
 )
 ```
 
-## Supported Syntax (`0.8.0`)
+## Supported Syntax (`0.8.1`)
 
 ### Blocks
 
@@ -184,6 +184,7 @@ data class OrcaParseResult(
 - HTML blocks (styled rendering with tag support)
 - footnote definitions
 - **admonitions / callouts** (`> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`)
+- **definition lists** (`Term` + `: Definition`)
 
 ### Inlines
 
@@ -201,6 +202,7 @@ data class OrcaParseResult(
 - inline footnotes `^[...]`
 - soft/hard line breaks (`\n`)
 - **emoji shortcodes** (`:smile:`, `:rocket:`, `:fire:`, etc.)
+- **abbreviations** (`*[ABBR]: Full Title`)
 
 ### GFM extensions enabled
 
@@ -274,6 +276,7 @@ Use `OrcaStyle` as a single configuration object:
 - `image`
 - `inlineImage`
 - `admonition`
+- `definitionList`
 
 Example:
 

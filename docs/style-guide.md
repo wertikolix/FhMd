@@ -26,6 +26,7 @@ Default: `OrcaStyle()` (light theme). Dark theme: `OrcaDefaults.darkStyle()`.
 | `image` | `OrcaImageStyle` | Standalone image appearance |
 | `admonition` | `OrcaAdmonitionStyle` | Callout block colors and layout |
 | `inlineImage` | `OrcaInlineImageStyle` | Inline image sizing |
+| `definitionList` | `OrcaDefinitionListStyle` | Definition list appearance |
 
 ---
 
@@ -59,6 +60,7 @@ Span styles applied to inline markdown elements within text.
 | `footnoteReference` | `[^ref]` | Superscript, 12sp, grey (#455A64) |
 | `superscript` | `^text^` | Superscript baseline shift, 12sp |
 | `subscript` | `~text~` | Subscript baseline shift, 12sp |
+| `abbreviation` | `*[ABBR]: Title` | Underline, subtle background |
 
 ---
 
@@ -186,6 +188,17 @@ GitHub-style callout blocks (`> [!NOTE]`, `> [!WARNING]`, etc.).
 | IMPORTANT | #7B1FA2 (purple) | #0D7B1FA2 |
 | WARNING | #EF6C00 (orange) | #0DEF6C00 |
 | CAUTION | #C62828 (red) | #0DC62828 |
+
+---
+
+## Definition List (`OrcaDefinitionListStyle`)
+
+| Property | Default | Description |
+|---|---|---|
+| `termStyle` | 16sp, SemiBold | Text style for the term |
+| `definitionIndent` | 16dp | Left indent for definitions |
+| `termSpacing` | 8dp | Vertical space between term-definition groups |
+| `definitionSpacing` | 4dp | Vertical space between definitions of the same term |
 
 ---
 

@@ -218,6 +218,23 @@ Raw HTML block passed through verbatim.
 </div>
 ```
 
+### DefinitionList
+
+Definition list containing term-definition pairs.
+
+| Property | Type | Description |
+|---|---|---|
+| `items` | `List<OrcaDefinitionListItem>` | Ordered list of term-definition entries |
+
+```markdown
+Term
+: Definition one
+: Definition two
+
+Another Term
+: Its definition
+```
+
 ---
 
 ## Inline Nodes
@@ -363,6 +380,21 @@ Raw inline HTML passed through verbatim.
 This has <em>inline HTML</em> in it.
 ```
 
+### Abbreviation
+
+Abbreviation with an expanded title. Produced when abbreviation definitions are present and the abbreviation text appears in document content.
+
+| Property | Type | Description |
+|---|---|---|
+| `text` | `String` | The abbreviated text as it appears in the source |
+| `title` | `String` | The full expansion / definition |
+
+```markdown
+*[HTML]: Hyper Text Markup Language
+
+The HTML specification is maintained by the W3C.
+```
+
 ---
 
 ## Supporting Types
@@ -430,3 +462,18 @@ Footnote definition mapping a label to its block content.
 |---|---|---|
 | `label` | `String` | Reference label (e.g. `"1"` for `[^1]`) |
 | `blocks` | `List<OrcaBlock>` | Block-level content of the footnote |
+
+### OrcaDefinitionListItem
+
+Single entry in a `DefinitionList`.
+
+| Property | Type | Description |
+|---|---|---|
+| `term` | `List<OrcaInline>` | Inline elements forming the term being defined |
+| `definitions` | `List<List<OrcaBlock>>` | One or more definitions, each containing block-level content |
+
+```markdown
+**Bold Term**
+: First definition with *formatting*
+: Second definition
+```

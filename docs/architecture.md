@@ -28,19 +28,31 @@ markdown string
 1. extractFrontMatter()          ── strips YAML (---) or TOML (+++) front matter
     │
     ▼
-2. extractFootnoteDefinitions()  ── pulls [^label]: blocks out of the body
+2. extractAbbreviations()        ── pulls *[ABBR]: Title definitions, stores map
     │
     ▼
-3. MarkdownParser.buildMarkdownTreeFromString()   ── intellij-markdown AST
+3. extractDefinitionLists()      ── pulls Term / : Definition blocks, inserts placeholders
     │
     ▼
-4. IntellijTreeMapper.mapBlock() ── recursive walk converting ASTNode → OrcaBlock/OrcaInline
+4. extractFootnoteDefinitions()  ── pulls [^label]: blocks out of the body
+    │
+    ▼
+5. MarkdownParser.buildMarkdownTreeFromString()   ── intellij-markdown AST
+    │
+    ▼
+6. IntellijTreeMapper.mapBlock() ── recursive walk converting ASTNode → OrcaBlock/OrcaInline
     │  ├─ emoji shortcodes       ── replaceEmojiShortcodes() on OrcaInline.Text nodes
     │  ├─ footnote syntax        ── processFootnoteSyntax() parses [^ref] and ^[inline] from text
     │  └─ super/subscript        ── processSuperSubScript() parses ^text^ and ~text~
     │
     ▼
-5. OrcaDocument(blocks, frontMatter)
+7. Placeholder resolution        ── definition list placeholders → OrcaBlock.DefinitionList
+    │
+    ▼
+8. applyAbbreviations()          ── replaces abbreviation matches in inline content
+    │
+    ▼
+9. OrcaDocument(blocks, frontMatter)
 ```
 
 ### Stage details
@@ -48,13 +60,19 @@ markdown string
 **1. Front matter extraction** (`IntellijMarkdownFrontMatter.kt`)
 Runs before the markdown parser sees the input. Detects `---`/`...` (YAML) or `+++` (TOML) delimiters at the start of the source. Parses simple `key: value` / `key = value` entries into `OrcaFrontMatter.Yaml` or `OrcaFrontMatter.Toml`. The remaining markdown body is passed downstream.
 
-**2. Footnote extraction** (`IntellijMarkdownFootnotes.kt`)
+**2. Abbreviation extraction** (`IntellijMarkdownAbbreviations.kt`)
+Scans for `*[ABBR]: Full Title` definition lines. Removes them from the body and stores a `Map<String, String>` of abbreviation → expansion. The map is applied as a post-processing step after all blocks are parsed (step 8).
+
+**3. Definition list extraction** (`IntellijMarkdownDefinitionList.kt`)
+Scans for `Term` + `: Definition` patterns. Replaces them with HTML comment placeholders (`<!--orca:deflist:N-->`) so the intellij-markdown parser doesn't misinterpret them. After tree mapping, placeholders are resolved back into `OrcaBlock.DefinitionList` nodes with fully parsed inline terms and block-level definitions.
+
+**4. Footnote extraction** (`IntellijMarkdownFootnotes.kt`)
 Scans for `[^label]: content` definition blocks (with continuation-indent support). Removes them from the body so the intellij-markdown parser doesn't misinterpret them. Extracted `FootnoteSourceDefinition`s are parsed into `OrcaFootnoteDefinition`s after the main tree mapping completes.
 
-**3. IntelliJ markdown AST**
+**5. IntelliJ markdown AST**
 Uses `MarkdownParser(GFMFlavourDescriptor())` — GitHub-Flavored Markdown with tables, task lists, strikethrough, and autolinks.
 
-**4. Tree mapping** (`IntellijMarkdownTreeMapper.kt`)
+**6. Tree mapping** (`IntellijMarkdownTreeMapper.kt`)
 `IntellijTreeMapper` walks the intellij-markdown `ASTNode` tree and produces `OrcaBlock`/`OrcaInline` nodes. Key post-processing steps applied during inline mapping:
 
 - **Emoji shortcodes** — `replaceEmojiShortcodes()` converts `:rocket:` → 🚀 on `OrcaInline.Text` nodes. Uses a static map of ~150 common shortcodes (`OrcaEmojiShortcodes.kt`).
@@ -79,15 +97,15 @@ OrcaDocument
 
 ### Block types (`OrcaBlock` — sealed interface)
 
-`Heading`, `Paragraph`, `ListBlock`, `Quote`, `Admonition`, `CodeBlock`, `Image`, `ThematicBreak`, `Table`, `Footnotes`, `HtmlBlock`
+`Heading`, `Paragraph`, `ListBlock`, `Quote`, `Admonition`, `CodeBlock`, `Image`, `ThematicBreak`, `Table`, `Footnotes`, `HtmlBlock`, `DefinitionList`
 
 ### Inline types (`OrcaInline` — sealed interface)
 
-`Text`, `Bold`, `Italic`, `Strikethrough`, `Superscript`, `Subscript`, `InlineCode`, `Link`, `Image`, `FootnoteReference`, `HtmlInline`
+`Text`, `Bold`, `Italic`, `Strikethrough`, `Superscript`, `Subscript`, `InlineCode`, `Link`, `Image`, `FootnoteReference`, `HtmlInline`, `Abbreviation`
 
 Both are **sealed interfaces**, enabling exhaustive `when` handling — the compiler enforces that all variants are covered. This is used throughout the rendering layer (see `OrcaBlockNode`).
 
-Supporting types: `OrcaListItem` (with optional `OrcaTaskState`), `OrcaTableCell` (with `OrcaTableAlignment`), `OrcaFootnoteDefinition`, `OrcaAdmonitionType`, `OrcaFrontMatter`.
+Supporting types: `OrcaListItem` (with optional `OrcaTaskState`), `OrcaTableCell` (with `OrcaTableAlignment`), `OrcaFootnoteDefinition`, `OrcaDefinitionListItem`, `OrcaAdmonitionType`, `OrcaFrontMatter`.
 
 > For the complete node reference with all properties, see `ast-reference.md`.
 
@@ -110,7 +128,8 @@ LazyColumn / Column        ── root layout (OrcaRootLayout.LAZY_COLUMN or .CO
 OrcaBlockNode()            ── exhaustive when-dispatch on OrcaBlock sealed variants
     │
     ├── HeadingNode, ParagraphNode, ListBlockNode, QuoteBlockNode,
-    │   CodeBlockNode, TableBlockNode, AdmonitionNode, FootnotesNode, ...
+    │   CodeBlockNode, TableBlockNode, AdmonitionNode, FootnotesNode,
+    │   DefinitionListNode, ...
     │
     └── buildInlineAnnotatedString()  ── OrcaInline list → AnnotatedString
         (OrcaInlineText.kt)              with SpanStyles, LinkAnnotations, inline images

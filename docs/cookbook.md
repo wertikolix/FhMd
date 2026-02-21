@@ -259,3 +259,84 @@ Orca(
     rootLayout = OrcaRootLayout.LAZY_COLUMN, // efficient for long content
 )
 ```
+
+## Definition lists
+
+Orca supports PHP Markdown Extra / Pandoc definition list syntax:
+
+```kotlin
+val markdown = """
+    Apple
+    : A fruit that grows on trees.
+    : Used in pies, cider, and juice.
+
+    Kotlin
+    : A modern programming language for the JVM.
+""".trimIndent()
+
+Orca(
+    markdown = markdown,
+    parser = OrcaMarkdownParser(),
+)
+```
+
+Customize definition list appearance:
+
+```kotlin
+OrcaStyle(
+    definitionList = OrcaDefinitionListStyle(
+        termStyle = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0)),
+        definitionIndent = 24.dp,
+        termSpacing = 12.dp,
+        definitionSpacing = 6.dp,
+    ),
+)
+```
+
+## Abbreviations
+
+Define abbreviations once, and all occurrences in the document get styled automatically:
+
+```kotlin
+val markdown = """
+    *[HTML]: Hyper Text Markup Language
+    *[CSS]: Cascading Style Sheets
+    *[API]: Application Programming Interface
+
+    The HTML specification defines how browsers render pages.
+    Use CSS for styling and the REST API for data.
+""".trimIndent()
+
+Orca(
+    markdown = markdown,
+    parser = OrcaMarkdownParser(),
+)
+```
+
+Abbreviation definitions are removed from the rendered output. Matched text gets an underline style by default. Customize via:
+
+```kotlin
+OrcaStyle(
+    inline = OrcaInlineStyle(
+        abbreviation = SpanStyle(
+            textDecoration = TextDecoration.Underline,
+            color = Color(0xFF6A1B9A),
+        ),
+    ),
+)
+```
+
+## Accessing definition lists from the AST
+
+```kotlin
+val parser = OrcaMarkdownParser()
+val document = parser.parse(markdown)
+
+document.blocks
+    .filterIsInstance<OrcaBlock.DefinitionList>()
+    .flatMap { it.items }
+    .forEach { item ->
+        val termText = item.term.filterIsInstance<OrcaInline.Text>().joinToString("") { it.text }
+        println("Term: $termText, definitions: ${item.definitions.size}")
+    }
+```
