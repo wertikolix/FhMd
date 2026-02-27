@@ -1,10 +1,15 @@
 package ru.wertik.orca.sample
 
+import android.app.Application
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import coil3.ImageLoader
+import coil3.SingletonImageLoader
+import coil3.network.ktor3.KtorNetworkFetcherFactory
+import coil3.request.crossfade
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -70,6 +75,17 @@ import ru.wertik.orca.compose.OrcaDefaults
 import ru.wertik.orca.compose.OrcaRootLayout
 import ru.wertik.orca.core.OrcaMarkdownParser
 
+class OrcaSampleApplication : Application(), SingletonImageLoader.Factory {
+    override fun newImageLoader(context: coil3.PlatformContext): ImageLoader {
+        return ImageLoader.Builder(context)
+            .components {
+                add(KtorNetworkFetcherFactory())
+            }
+            .crossfade(true)
+            .build()
+    }
+}
+
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,9 +126,7 @@ private fun OrcaSampleApp(
 ) {
     val context = LocalContext.current
     val parser = remember { OrcaMarkdownParser() }
-    val orcaStyle = remember(isDark) {
-        if (isDark) OrcaDefaults.darkStyle() else OrcaDefaults.lightStyle()
-    }
+    val orcaStyle = if (isDark) OrcaDefaults.darkStyle() else OrcaDefaults.lightStyle()
 
     val screens = remember { SampleScreen.entries }
     var selectedScreen by rememberSaveable { mutableIntStateOf(0) }
@@ -412,6 +426,12 @@ Chemical formula example: C~6~H~12~O~6~ (glucose)
 - [x] Compose UI for Android + Desktop
 - [ ] iOS SwiftUI wrapper
 - [ ] Wasm target support
+
+---
+
+## Image loading
+
+![Kotlin logo](https://raw.githubusercontent.com/JetBrains/kotlin-web-site/master/static/images/kotlin-logo.png)
 """.trimIndent()
 
 private val BLOCKS_MARKDOWN = """
@@ -494,6 +514,19 @@ ORDER BY month DESC;
 <p>Most markdown renderers handle <b>basic HTML</b> inline — things like <i>emphasis</i>, <code>code</code>, and <a href="https://kotlinlang.org">links</a> work as expected.</p>
 
 <blockquote>The tricky part is <mark>highlighted text</mark> and nested structures — not every renderer gets those right.</blockquote>
+
+---
+
+## Mermaid diagram (placeholder)
+
+```mermaid
+graph TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Do something]
+    B -->|No| D[Do something else]
+    C --> E[End]
+    D --> E
+```
 """.trimIndent()
 
 private val TABLES_MARKDOWN = """

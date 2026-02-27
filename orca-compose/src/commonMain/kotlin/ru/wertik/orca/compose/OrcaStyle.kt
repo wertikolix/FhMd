@@ -1,7 +1,9 @@
 package ru.wertik.orca.compose
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
@@ -306,6 +308,14 @@ data class OrcaStyle(
 }
 
 object OrcaDefaults {
+
+    /**
+     * Returns [lightStyle] or [darkStyle] based on the system theme.
+     */
+    @Composable
+    fun adaptiveStyle(): OrcaStyle {
+        return if (isSystemInDarkTheme()) darkStyle() else lightStyle()
+    }
 
     fun lightStyle(): OrcaStyle = OrcaStyle()
 

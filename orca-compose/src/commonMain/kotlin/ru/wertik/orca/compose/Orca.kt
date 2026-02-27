@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -284,55 +285,57 @@ fun Orca(
                 renderBlocks.associate { item -> item.key to BringIntoViewRequester() }
             }
 
-            Column(
-                modifier = modifier,
-                verticalArrangement = Arrangement.spacedBy(style.layout.blockSpacing),
-            ) {
-                renderBlocks.forEach { item ->
-                    val requester = blockRequesters[item.key]
-                    val itemModifier = if (requester != null) {
-                        Modifier.bringIntoViewRequester(requester)
-                    } else {
-                        Modifier
-                    }
+            SelectionContainer {
+                Column(
+                    modifier = modifier,
+                    verticalArrangement = Arrangement.spacedBy(style.layout.blockSpacing),
+                ) {
+                    renderBlocks.forEach { item ->
+                        val requester = blockRequesters[item.key]
+                        val itemModifier = if (requester != null) {
+                            Modifier.bringIntoViewRequester(requester)
+                        } else {
+                            Modifier
+                        }
 
-                    androidx.compose.foundation.layout.Box(modifier = itemModifier) {
-                        OrcaBlockNode(
-                            block = item.block,
-                            style = style,
-                            onLinkClick = onLinkClick,
-                            securityPolicy = securityPolicy,
-                            footnoteNumbers = footnoteNumbers,
-                            sourceBlockKey = item.key,
-                            activeFootnoteLabel = activeFootnoteLabel,
-                            onFootnoteReferenceClick = { label, sourceBlockKey ->
-                                onFootnoteReferenceClick(
-                                    label = label,
-                                    sourceBlockKey = sourceBlockKey,
-                                    scrollToFootnotes = {
-                                        val footnoteBlock = renderBlocks.firstOrNull { rb ->
-                                            val block = rb.block
-                                            block is OrcaBlock.Footnotes && block.definitions.any { it.label == label }
-                                        } ?: renderBlocks.firstOrNull { rb -> rb.block is OrcaBlock.Footnotes }
-                                        val targetRequester = footnoteBlock?.key?.let { blockRequesters[it] }
-                                        if (targetRequester != null) {
-                                            scope.launch { targetRequester.bringIntoView() }
-                                        }
-                                    },
-                                )
-                            },
-                            onFootnoteBackClick = { label ->
-                                onFootnoteBackClick(
-                                    label = label,
-                                    scrollToSource = { sourceBlockKey ->
-                                        val targetRequester = blockRequesters[sourceBlockKey]
-                                        if (targetRequester != null) {
-                                            scope.launch { targetRequester.bringIntoView() }
-                                        }
-                                    },
-                                )
-                            },
-                        )
+                        androidx.compose.foundation.layout.Box(modifier = itemModifier) {
+                            OrcaBlockNode(
+                                block = item.block,
+                                style = style,
+                                onLinkClick = onLinkClick,
+                                securityPolicy = securityPolicy,
+                                footnoteNumbers = footnoteNumbers,
+                                sourceBlockKey = item.key,
+                                activeFootnoteLabel = activeFootnoteLabel,
+                                onFootnoteReferenceClick = { label, sourceBlockKey ->
+                                    onFootnoteReferenceClick(
+                                        label = label,
+                                        sourceBlockKey = sourceBlockKey,
+                                        scrollToFootnotes = {
+                                            val footnoteBlock = renderBlocks.firstOrNull { rb ->
+                                                val block = rb.block
+                                                block is OrcaBlock.Footnotes && block.definitions.any { it.label == label }
+                                            } ?: renderBlocks.firstOrNull { rb -> rb.block is OrcaBlock.Footnotes }
+                                            val targetRequester = footnoteBlock?.key?.let { blockRequesters[it] }
+                                            if (targetRequester != null) {
+                                                scope.launch { targetRequester.bringIntoView() }
+                                            }
+                                        },
+                                    )
+                                },
+                                onFootnoteBackClick = { label ->
+                                    onFootnoteBackClick(
+                                        label = label,
+                                        scrollToSource = { sourceBlockKey ->
+                                            val targetRequester = blockRequesters[sourceBlockKey]
+                                            if (targetRequester != null) {
+                                                scope.launch { targetRequester.bringIntoView() }
+                                            }
+                                        },
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
             }

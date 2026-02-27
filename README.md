@@ -7,8 +7,7 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ## Status
 
-- Current stable minor: `0.8.2`
-- Release notes: [`docs/releases/0.8.2.md`](docs/releases/0.8.2.md)
+- Current stable minor: `0.8.3`
 - Maturity: lightweight production-ready core subset (Markdown-first)
 
 ## Documentation
@@ -45,8 +44,8 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ```kotlin
 // Kotlin Multiplatform (commonMain)
-implementation("ru.wertik:orca-core:0.8.2")
-implementation("ru.wertik:orca-compose:0.8.2")
+implementation("ru.wertik:orca-core:0.8.3")
+implementation("ru.wertik:orca-compose:0.8.3")
 ```
 
 Gradle resolves platform-specific artifacts automatically (`orca-core-jvm`, `orca-compose-android`, etc.).
@@ -169,7 +168,7 @@ data class OrcaParseResult(
 )
 ```
 
-## Supported Syntax (`0.8.2`)
+## Supported Syntax (`0.8.3`)
 
 ### Blocks
 
@@ -228,10 +227,12 @@ data class OrcaParseResult(
 - parsing off main thread (`Dispatchers.Default`)
 - parse failure fallback to previous valid document (UI is not dropped)
 - deterministic block keys for better list state retention
+- **full document text selection** — all text (headings, paragraphs, lists, quotes, tables) is selectable
 - footnotes rendered as superscript markers + numbered definitions block
 - footnote navigation:
   - tap reference marker (`[n]`) to jump to definition
   - tap backlink (`↩`) to return to source block
+- **accessibility** — semantic roles for headings, content descriptions for images and blocks
 
 ### Admonition rendering
 
@@ -245,11 +246,22 @@ data class OrcaParseResult(
 - monospace typography
 - rounded container + subtle border
 - optional language label (when language exists)
-- syntax highlighting (enabled by default, configurable)
+- syntax highlighting (enabled by default, configurable) — supports multiline strings, raw strings, template literals, decorators, type annotations
 - selectable code text
 - optional line numbers for multiline blocks
 - horizontal scroll for long lines (no forced wrap)
 - optional copy-to-clipboard button
+
+### Image loading
+
+- shimmer/skeleton placeholder while loading (no more raw text fallback)
+- smooth crossfade transition on load
+- error state with icon fallback
+
+### Mermaid diagrams
+
+- mermaid code blocks show a styled placeholder with diagram type label
+- no WebView dependency — placeholder only (rendering is left to the consumer)
 
 ### Table rendering
 
@@ -280,7 +292,14 @@ Use `OrcaStyle` as a single configuration object:
 - `admonition`
 - `definitionList`
 
-Example:
+### Adaptive theme
+
+```kotlin
+// Automatically picks light or dark style based on system theme
+val style = OrcaDefaults.adaptiveStyle() // @Composable
+```
+
+### Custom style
 
 ```kotlin
 import androidx.compose.ui.graphics.Color

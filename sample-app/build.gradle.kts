@@ -68,6 +68,10 @@ dependencies {
     implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.ui.tooling.preview)
 
+    implementation(libs.coil3.compose)
+    implementation(libs.coil3.network.ktor3)
+    implementation(libs.ktor.client.android)
+
     debugImplementation(libs.compose.ui.tooling)
     debugImplementation(libs.compose.ui.test.manifest)
 
