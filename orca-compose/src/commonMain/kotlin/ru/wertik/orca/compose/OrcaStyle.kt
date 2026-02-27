@@ -196,6 +196,8 @@ data class OrcaAdmonitionStyle(
     val stripeWidth: Dp = 3.dp,
     val spacing: Dp = 10.dp,
     val titleStyle: TextStyle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
+    val collapsible: Boolean = false,
+    val collapsedByDefault: Boolean = false,
     val noteColor: Color = Color(0xFF1565C0),
     val tipColor: Color = Color(0xFF2E7D32),
     val importantColor: Color = Color(0xFF7B1FA2),

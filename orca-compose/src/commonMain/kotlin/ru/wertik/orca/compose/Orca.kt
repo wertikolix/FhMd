@@ -27,6 +27,7 @@ import ru.wertik.orca.core.OrcaDocument
 import ru.wertik.orca.core.OrcaParseError
 import ru.wertik.orca.core.OrcaParseDiagnostics
 import ru.wertik.orca.core.OrcaParser
+import kotlin.reflect.KClass
 
 private const val PARSE_LOG_TAG = "Orca"
 private const val DEFAULT_STREAMING_DEBOUNCE_MS = 80L
@@ -64,6 +65,8 @@ enum class OrcaRootLayout {
  * @param onLinkClick callback invoked when a user taps a link.
  * @param onParseDiagnostics optional callback receiving parse diagnostics (errors and warnings) after each parse.
  * @param streamingDebounceMs debounce delay in milliseconds before re-parsing after [markdown] changes. Default is 80 ms.
+ * @param blockOverride optional map of block types to custom composable renderers. When a block's class matches a key, the override is used instead of the default renderer.
+ * @param imageContent optional composable for rendering images. When provided, replaces the built-in Coil-based image loader. Receives the image URL and content description.
  * @see Orca
  * @see OrcaStyle
  * @see OrcaSecurityPolicy
@@ -80,6 +83,8 @@ fun Orca(
     onLinkClick: (String) -> Unit = noOpLinkClick,
     onParseDiagnostics: ((OrcaParseDiagnostics) -> Unit)? = null,
     streamingDebounceMs: Long = DEFAULT_STREAMING_DEBOUNCE_MS,
+    blockOverride: Map<KClass<out OrcaBlock>, @Composable (OrcaBlock) -> Unit> = emptyMap(),
+    imageContent: (@Composable (url: String, contentDescription: String?) -> Unit)? = null,
 ) {
     val parserKey = remember(parser) { parser.cacheKey() }
 
@@ -156,6 +161,8 @@ fun Orca(
         rootLayout = rootLayout,
         securityPolicy = securityPolicy,
         onLinkClick = onLinkClick,
+        blockOverride = blockOverride,
+        imageContent = imageContent,
     )
 }
 
@@ -172,6 +179,8 @@ fun Orca(
  * @param rootLayout whether to use a [LazyColumn][OrcaRootLayout.LAZY_COLUMN] or a [Column][OrcaRootLayout.COLUMN].
  * @param securityPolicy URL filter applied to links and images before rendering.
  * @param onLinkClick callback invoked when a user taps a link.
+ * @param blockOverride optional map of block types to custom composable renderers.
+ * @param imageContent optional composable for rendering images, replacing the built-in Coil loader.
  * @see OrcaDocument
  * @see OrcaStyle
  */
@@ -183,6 +192,8 @@ fun Orca(
     rootLayout: OrcaRootLayout = OrcaRootLayout.LAZY_COLUMN,
     securityPolicy: OrcaSecurityPolicy = OrcaSecurityPolicies.Default,
     onLinkClick: (String) -> Unit = noOpLinkClick,
+    blockOverride: Map<KClass<out OrcaBlock>, @Composable (OrcaBlock) -> Unit> = emptyMap(),
+    imageContent: (@Composable (url: String, contentDescription: String?) -> Unit)? = null,
 ) {
     val renderBlocks = remember(document.blocks) {
         buildRenderBlocks(document.blocks)
@@ -240,42 +251,48 @@ fun Orca(
                     items = renderBlocks,
                     key = { item -> item.key },
                 ) { item ->
-                    OrcaBlockNode(
-                        block = item.block,
-                        style = style,
-                        onLinkClick = onLinkClick,
-                        securityPolicy = securityPolicy,
-                        footnoteNumbers = footnoteNumbers,
-                        sourceBlockKey = item.key,
-                        activeFootnoteLabel = activeFootnoteLabel,
-                        onFootnoteReferenceClick = { label, sourceBlockKey ->
-                            onFootnoteReferenceClick(
-                                label = label,
-                                sourceBlockKey = sourceBlockKey,
-                                scrollToFootnotes = {
-                                    val targetIndex = findFootnoteBlockIndex(label)
-                                    if (targetIndex != null) {
-                                        scope.launch {
-                                            listState.animateScrollToItem(targetIndex)
+                    val override = blockOverride[item.block::class]
+                    if (override != null) {
+                        override(item.block)
+                    } else {
+                        OrcaBlockNode(
+                            block = item.block,
+                            style = style,
+                            onLinkClick = onLinkClick,
+                            securityPolicy = securityPolicy,
+                            footnoteNumbers = footnoteNumbers,
+                            sourceBlockKey = item.key,
+                            activeFootnoteLabel = activeFootnoteLabel,
+                            onFootnoteReferenceClick = { label, sourceBlockKey ->
+                                onFootnoteReferenceClick(
+                                    label = label,
+                                    sourceBlockKey = sourceBlockKey,
+                                    scrollToFootnotes = {
+                                        val targetIndex = findFootnoteBlockIndex(label)
+                                        if (targetIndex != null) {
+                                            scope.launch {
+                                                listState.animateScrollToItem(targetIndex)
+                                            }
                                         }
-                                    }
-                                },
-                            )
-                        },
-                        onFootnoteBackClick = { label ->
-                            onFootnoteBackClick(
-                                label = label,
-                                scrollToSource = { sourceBlockKey ->
-                                    val targetIndex = blockIndexByKey[sourceBlockKey]
-                                    if (targetIndex != null) {
-                                        scope.launch {
-                                            listState.animateScrollToItem(targetIndex)
+                                    },
+                                )
+                            },
+                            onFootnoteBackClick = { label ->
+                                onFootnoteBackClick(
+                                    label = label,
+                                    scrollToSource = { sourceBlockKey ->
+                                        val targetIndex = blockIndexByKey[sourceBlockKey]
+                                        if (targetIndex != null) {
+                                            scope.launch {
+                                                listState.animateScrollToItem(targetIndex)
+                                            }
                                         }
-                                    }
-                                },
-                            )
-                        },
-                    )
+                                    },
+                                )
+                            },
+                            imageContent = imageContent,
+                        )
+                    }
                 }
             }
         }
@@ -299,42 +316,48 @@ fun Orca(
                         }
 
                         androidx.compose.foundation.layout.Box(modifier = itemModifier) {
-                            OrcaBlockNode(
-                                block = item.block,
-                                style = style,
-                                onLinkClick = onLinkClick,
-                                securityPolicy = securityPolicy,
-                                footnoteNumbers = footnoteNumbers,
-                                sourceBlockKey = item.key,
-                                activeFootnoteLabel = activeFootnoteLabel,
-                                onFootnoteReferenceClick = { label, sourceBlockKey ->
-                                    onFootnoteReferenceClick(
-                                        label = label,
-                                        sourceBlockKey = sourceBlockKey,
-                                        scrollToFootnotes = {
-                                            val footnoteBlock = renderBlocks.firstOrNull { rb ->
-                                                val block = rb.block
-                                                block is OrcaBlock.Footnotes && block.definitions.any { it.label == label }
-                                            } ?: renderBlocks.firstOrNull { rb -> rb.block is OrcaBlock.Footnotes }
-                                            val targetRequester = footnoteBlock?.key?.let { blockRequesters[it] }
-                                            if (targetRequester != null) {
-                                                scope.launch { targetRequester.bringIntoView() }
-                                            }
-                                        },
-                                    )
-                                },
-                                onFootnoteBackClick = { label ->
-                                    onFootnoteBackClick(
-                                        label = label,
-                                        scrollToSource = { sourceBlockKey ->
-                                            val targetRequester = blockRequesters[sourceBlockKey]
-                                            if (targetRequester != null) {
-                                                scope.launch { targetRequester.bringIntoView() }
-                                            }
-                                        },
-                                    )
-                                },
-                            )
+                            val override = blockOverride[item.block::class]
+                            if (override != null) {
+                                override(item.block)
+                            } else {
+                                OrcaBlockNode(
+                                    block = item.block,
+                                    style = style,
+                                    onLinkClick = onLinkClick,
+                                    securityPolicy = securityPolicy,
+                                    footnoteNumbers = footnoteNumbers,
+                                    sourceBlockKey = item.key,
+                                    activeFootnoteLabel = activeFootnoteLabel,
+                                    onFootnoteReferenceClick = { label, sourceBlockKey ->
+                                        onFootnoteReferenceClick(
+                                            label = label,
+                                            sourceBlockKey = sourceBlockKey,
+                                            scrollToFootnotes = {
+                                                val footnoteBlock = renderBlocks.firstOrNull { rb ->
+                                                    val block = rb.block
+                                                    block is OrcaBlock.Footnotes && block.definitions.any { it.label == label }
+                                                } ?: renderBlocks.firstOrNull { rb -> rb.block is OrcaBlock.Footnotes }
+                                                val targetRequester = footnoteBlock?.key?.let { blockRequesters[it] }
+                                                if (targetRequester != null) {
+                                                    scope.launch { targetRequester.bringIntoView() }
+                                                }
+                                            },
+                                        )
+                                    },
+                                    onFootnoteBackClick = { label ->
+                                        onFootnoteBackClick(
+                                            label = label,
+                                            scrollToSource = { sourceBlockKey ->
+                                                val targetRequester = blockRequesters[sourceBlockKey]
+                                                if (targetRequester != null) {
+                                                    scope.launch { targetRequester.bringIntoView() }
+                                                }
+                                            },
+                                        )
+                                    },
+                                    imageContent = imageContent,
+                                )
+                            }
                         }
                     }
                 }

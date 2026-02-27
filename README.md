@@ -7,7 +7,7 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ## Status
 
-- Current stable minor: `0.8.4`
+- Current stable minor: `0.9.0`
 - Maturity: lightweight production-ready core subset (Markdown-first)
 
 ## Documentation
@@ -36,7 +36,7 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
   - Compose Multiplatform renderer for `OrcaDocument`
   - Targets: Android, iOS, Desktop (JVM), wasmJs
   - Style model (`OrcaStyle`)
-  - Image loading via Coil 3 + Ktor
+  - Image loading via Coil 3 + Ktor (pluggable — bring your own image loader)
 - `sample-app`
   - Android demo for manual checks
 
@@ -44,8 +44,8 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ```kotlin
 // Kotlin Multiplatform (commonMain)
-implementation("ru.wertik:orca-core:0.8.4")
-implementation("ru.wertik:orca-compose:0.8.4")
+implementation("ru.wertik:orca-core:0.9.0")
+implementation("ru.wertik:orca-compose:0.9.0")
 ```
 
 Gradle resolves platform-specific artifacts automatically (`orca-core-jvm`, `orca-compose-android`, etc.).
@@ -168,7 +168,7 @@ data class OrcaParseResult(
 )
 ```
 
-## Supported Syntax (`0.8.4`)
+## Supported Syntax (`0.9.0`)
 
 ### Blocks
 
@@ -233,6 +233,8 @@ data class OrcaParseResult(
   - tap reference marker (`[n]`) to jump to definition
   - tap backlink (`↩`) to return to source block
 - **accessibility** — semantic roles for headings, content descriptions for images and blocks
+- **custom block renderers** — override rendering for any block type via `blockOverride` parameter
+- **pluggable image loading** — supply custom `imageContent` composable to replace built-in Coil loader
 
 ### Admonition rendering
 
@@ -240,6 +242,7 @@ data class OrcaParseResult(
 - colored left stripe + icon + title
 - full content block rendering inside admonition
 - light and dark theme color presets
+- **collapsible mode** — toggle content visibility with animated expand/collapse
 
 ### Code block rendering
 
@@ -351,6 +354,55 @@ Always keep your own URL-opening policy in `onLinkClick`.
 | Desktop (JVM) | commonMain + jvmMain | full | `OrcaMarkdownParser` |
 | iOS | commonMain | full | `OrcaMarkdownParser` |
 | wasmJs (Web) | commonMain | full | `OrcaMarkdownParser` |
+
+## Extensibility
+
+### Custom block renderers
+
+Override how specific block types are rendered:
+
+```kotlin
+Orca(
+    markdown = markdown,
+    parser = OrcaMarkdownParser(),
+    blockOverride = mapOf(
+        OrcaBlock.CodeBlock::class to { block ->
+            val code = block as OrcaBlock.CodeBlock
+            MyCustomCodeBlock(code = code.code, language = code.language)
+        },
+    ),
+)
+```
+
+### Custom image loader
+
+Replace the built-in Coil image loader with your own:
+
+```kotlin
+Orca(
+    markdown = markdown,
+    parser = OrcaMarkdownParser(),
+    imageContent = { url, contentDescription ->
+        // Use Glide, Kamel, or any custom loader
+        GlideImage(model = url, contentDescription = contentDescription)
+    },
+)
+```
+
+### Collapsible admonitions
+
+```kotlin
+Orca(
+    markdown = markdown,
+    parser = OrcaMarkdownParser(),
+    style = OrcaStyle(
+        admonition = OrcaAdmonitionStyle(
+            collapsible = true,
+            collapsedByDefault = false,
+        ),
+    ),
+)
+```
 
 ## Not Supported Yet
 

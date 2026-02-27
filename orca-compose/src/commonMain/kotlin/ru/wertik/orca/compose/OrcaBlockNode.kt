@@ -1,5 +1,8 @@
 package ru.wertik.orca.compose
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -54,6 +57,7 @@ internal fun OrcaBlockNode(
     activeFootnoteLabel: String?,
     onFootnoteReferenceClick: (label: String, sourceBlockKey: String) -> Unit,
     onFootnoteBackClick: (label: String) -> Unit,
+    imageContent: (@Composable (url: String, contentDescription: String?) -> Unit)? = null,
 ) {
     when (block) {
         is OrcaBlock.Heading -> HeadingNode(
@@ -86,6 +90,7 @@ internal fun OrcaBlockNode(
             activeFootnoteLabel = activeFootnoteLabel,
             onFootnoteReferenceClick = onFootnoteReferenceClick,
             onFootnoteBackClick = onFootnoteBackClick,
+            imageContent = imageContent,
         )
 
         is OrcaBlock.Quote -> QuoteBlockNode(
@@ -98,6 +103,7 @@ internal fun OrcaBlockNode(
             activeFootnoteLabel = activeFootnoteLabel,
             onFootnoteReferenceClick = onFootnoteReferenceClick,
             onFootnoteBackClick = onFootnoteBackClick,
+            imageContent = imageContent,
         )
 
         is OrcaBlock.CodeBlock -> CodeBlockNode(block = block, style = style)
@@ -106,6 +112,7 @@ internal fun OrcaBlockNode(
             block = block,
             style = style,
             securityPolicy = securityPolicy,
+            imageContent = imageContent,
         )
 
         is OrcaBlock.ThematicBreak -> ThematicBreakNode(style = style)
@@ -130,6 +137,7 @@ internal fun OrcaBlockNode(
             activeFootnoteLabel = activeFootnoteLabel,
             onFootnoteReferenceClick = onFootnoteReferenceClick,
             onFootnoteBackClick = onFootnoteBackClick,
+            imageContent = imageContent,
         )
 
         is OrcaBlock.HtmlBlock -> HtmlBlockNode(
@@ -149,6 +157,7 @@ internal fun OrcaBlockNode(
             activeFootnoteLabel = activeFootnoteLabel,
             onFootnoteReferenceClick = onFootnoteReferenceClick,
             onFootnoteBackClick = onFootnoteBackClick,
+            imageContent = imageContent,
         )
 
         is OrcaBlock.DefinitionList -> DefinitionListNode(
@@ -161,6 +170,7 @@ internal fun OrcaBlockNode(
             activeFootnoteLabel = activeFootnoteLabel,
             onFootnoteReferenceClick = onFootnoteReferenceClick,
             onFootnoteBackClick = onFootnoteBackClick,
+            imageContent = imageContent,
         )
     }
 }
@@ -263,6 +273,7 @@ private fun ListBlockNode(
     activeFootnoteLabel: String?,
     onFootnoteReferenceClick: (label: String, sourceBlockKey: String) -> Unit,
     onFootnoteBackClick: (label: String) -> Unit,
+    imageContent: (@Composable (url: String, contentDescription: String?) -> Unit)? = null,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(style.layout.nestedBlockSpacing),
@@ -295,6 +306,7 @@ private fun ListBlockNode(
                             activeFootnoteLabel = activeFootnoteLabel,
                             onFootnoteReferenceClick = onFootnoteReferenceClick,
                             onFootnoteBackClick = onFootnoteBackClick,
+                            imageContent = imageContent,
                         )
                     }
                 }
@@ -314,6 +326,7 @@ private fun QuoteBlockNode(
     activeFootnoteLabel: String?,
     onFootnoteReferenceClick: (label: String, sourceBlockKey: String) -> Unit,
     onFootnoteBackClick: (label: String) -> Unit,
+    imageContent: (@Composable (url: String, contentDescription: String?) -> Unit)? = null,
 ) {
     Row(
         modifier = Modifier.height(IntrinsicSize.Min),
@@ -341,6 +354,7 @@ private fun QuoteBlockNode(
                     activeFootnoteLabel = activeFootnoteLabel,
                     onFootnoteReferenceClick = onFootnoteReferenceClick,
                     onFootnoteBackClick = onFootnoteBackClick,
+                    imageContent = imageContent,
                 )
             }
         }
@@ -358,6 +372,7 @@ private fun FootnotesNode(
     activeFootnoteLabel: String?,
     onFootnoteReferenceClick: (label: String, sourceBlockKey: String) -> Unit,
     onFootnoteBackClick: (label: String) -> Unit,
+    imageContent: (@Composable (url: String, contentDescription: String?) -> Unit)? = null,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(style.layout.nestedBlockSpacing),
@@ -393,6 +408,7 @@ private fun FootnotesNode(
                             activeFootnoteLabel = activeFootnoteLabel,
                             onFootnoteReferenceClick = onFootnoteReferenceClick,
                             onFootnoteBackClick = onFootnoteBackClick,
+                            imageContent = imageContent,
                         )
                     }
 
@@ -579,6 +595,7 @@ private fun AdmonitionNode(
     activeFootnoteLabel: String?,
     onFootnoteReferenceClick: (label: String, sourceBlockKey: String) -> Unit,
     onFootnoteBackClick: (label: String) -> Unit,
+    imageContent: (@Composable (url: String, contentDescription: String?) -> Unit)? = null,
 ) {
     val admonitionStyle = style.admonition
     val color = when (block.type) {
@@ -596,6 +613,8 @@ private fun AdmonitionNode(
         OrcaAdmonitionType.CAUTION -> admonitionStyle.cautionBackground
     }
     val title = block.title ?: block.type.name.lowercase().replaceFirstChar { it.uppercase() }
+    val collapsible = admonitionStyle.collapsible
+    var expanded by remember { mutableStateOf(!admonitionStyle.collapsedByDefault) }
 
     Row(
         modifier = Modifier
@@ -616,22 +635,51 @@ private fun AdmonitionNode(
                 .padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(style.layout.nestedBlockSpacing),
         ) {
-            Text(
-                text = title,
-                style = admonitionStyle.titleStyle.copy(color = color),
-            )
-            block.blocks.forEach { childBlock ->
-                OrcaBlockNode(
-                    block = childBlock,
-                    style = style,
-                    onLinkClick = onLinkClick,
-                    securityPolicy = securityPolicy,
-                    footnoteNumbers = footnoteNumbers,
-                    sourceBlockKey = sourceBlockKey,
-                    activeFootnoteLabel = activeFootnoteLabel,
-                    onFootnoteReferenceClick = onFootnoteReferenceClick,
-                    onFootnoteBackClick = onFootnoteBackClick,
+            Row(
+                modifier = if (collapsible) {
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { expanded = !expanded }
+                } else {
+                    Modifier.fillMaxWidth()
+                },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = title,
+                    style = admonitionStyle.titleStyle.copy(color = color),
+                    modifier = Modifier.weight(1f),
                 )
+                if (collapsible) {
+                    Text(
+                        text = if (expanded) "\u25B2" else "\u25BC",
+                        style = admonitionStyle.titleStyle.copy(color = color),
+                    )
+                }
+            }
+            AnimatedVisibility(
+                visible = expanded || !collapsible,
+                enter = expandVertically(),
+                exit = shrinkVertically(),
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(style.layout.nestedBlockSpacing),
+                ) {
+                    block.blocks.forEach { childBlock ->
+                        OrcaBlockNode(
+                            block = childBlock,
+                            style = style,
+                            onLinkClick = onLinkClick,
+                            securityPolicy = securityPolicy,
+                            footnoteNumbers = footnoteNumbers,
+                            sourceBlockKey = sourceBlockKey,
+                            activeFootnoteLabel = activeFootnoteLabel,
+                            onFootnoteReferenceClick = onFootnoteReferenceClick,
+                            onFootnoteBackClick = onFootnoteBackClick,
+                            imageContent = imageContent,
+                        )
+                    }
+                }
             }
         }
     }
@@ -648,6 +696,7 @@ private fun DefinitionListNode(
     activeFootnoteLabel: String?,
     onFootnoteReferenceClick: (label: String, sourceBlockKey: String) -> Unit,
     onFootnoteBackClick: (label: String) -> Unit,
+    imageContent: (@Composable (url: String, contentDescription: String?) -> Unit)? = null,
 ) {
     val dlStyle = style.definitionList
     Column(
@@ -695,6 +744,7 @@ private fun DefinitionListNode(
                             activeFootnoteLabel = activeFootnoteLabel,
                             onFootnoteReferenceClick = onFootnoteReferenceClick,
                             onFootnoteBackClick = onFootnoteBackClick,
+                            imageContent = imageContent,
                         )
                     }
                 }

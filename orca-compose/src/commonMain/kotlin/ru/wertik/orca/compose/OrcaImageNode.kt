@@ -35,6 +35,7 @@ internal fun MarkdownImageNode(
     block: OrcaBlock.Image,
     style: OrcaStyle,
     securityPolicy: OrcaSecurityPolicy,
+    imageContent: (@Composable (url: String, contentDescription: String?) -> Unit)? = null,
 ) {
     val safeSource = remember(block.source, securityPolicy) {
         block.source.takeIf { source ->
@@ -53,6 +54,19 @@ internal fun MarkdownImageNode(
     }
 
     val description = block.alt ?: "Image"
+
+    if (imageContent != null) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = style.image.maxHeight)
+                .clip(style.image.shape)
+                .semantics { contentDescription = description },
+        ) {
+            imageContent(safeSource, description)
+        }
+        return
+    }
 
     SubcomposeAsyncImage(
         model = safeSource,
