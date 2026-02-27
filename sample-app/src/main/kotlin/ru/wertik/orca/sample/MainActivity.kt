@@ -237,11 +237,21 @@ private fun StreamingScreen(
     LaunchedEffect(Unit) {
         displayedText = ""
         isStreaming = true
-        // Simulate token-by-token streaming
-        val words = fullText.split(" ")
-        for (i in words.indices) {
-            displayedText = words.subList(0, i + 1).joinToString(" ")
-            delay(40L)
+        val random = kotlin.random.Random
+        var i = 0
+        while (i < fullText.length) {
+            // simulate chunked token delivery — 1 to 6 chars at a time
+            val chunkSize = random.nextInt(1, 7).coerceAtMost(fullText.length - i)
+            i += chunkSize
+            displayedText = fullText.substring(0, i)
+            // variable delay: shorter for mid-word, longer at whitespace/newlines
+            val lastChar = fullText[i - 1]
+            val baseDelay = when {
+                lastChar == '\n' -> random.nextLong(30, 80)
+                lastChar == ' ' -> random.nextLong(10, 40)
+                else -> random.nextLong(5, 20)
+            }
+            delay(baseDelay)
         }
         isStreaming = false
     }
@@ -353,205 +363,206 @@ private fun sampleMarkdown(screen: SampleScreen): String {
 // region Markdown content
 
 private val OVERVIEW_MARKDOWN = """
-# Orca v0.8
+# Setting up a Kotlin Multiplatform project
 
-Compose Multiplatform markdown renderer with full feature support.
+Getting KMP to work across all targets takes some effort, but the payoff is worth it. Here's a quick rundown of what you need to know.
 
-## Inline formatting
+## The basics
 
-**Bold**, *italic*, ~~strikethrough~~, `inline code`, and [links](https://github.com).
+Your shared code lives in `commonMain` and platform-specific bits go into `androidMain`, `iosMain`, etc. The Gradle setup looks something like this — expect/actual declarations bridge the gap between platforms.
 
-Combine them: ***bold italic***, **~~bold strikethrough~~**, *`italic code`*.
+Key things: **dependency injection** works differently per target, *coroutines* are your best friend for async, and ~~don't bother with~~ `Dispatchers.IO` on native — use `Dispatchers.Default` instead.
 
-## Superscript & subscript
+## Versioning
 
-Einstein's equation: E = mc^2^
+Current release: v2.1.0^beta^
 
-Water molecule: H~2~O
+Minimum SDK: API 24 (Android), iOS 15+, JDK 17 (Desktop)
 
-## Emoji shortcodes
+Chemical formula example: C~6~H~12~O~6~ (glucose)
 
-:rocket: Launch ready! :fire: Hot feature :sparkles: Looking good :thumbsup:
+## Quick links
 
-:warning: Careful here :bug: Found one :wrench: Fixing it :white_check_mark: Done!
+:white_check_mark: [Kotlin docs](https://kotlinlang.org/docs/multiplatform.html) — official guide
+:wrench: [Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform) — UI framework
+:rocket: [KMP library template](https://github.com/AdrielCafe/lyricist) — good reference
+
+:warning: Watch out for binary compatibility issues when publishing. :bug: iOS memory leaks with circular references are a classic trap.
 
 ---
 
-## Lists
+## What to set up first
 
-Unordered:
-- First item
-- Second item with **bold**
-- Third item with `code`
+- Gradle version catalogs (`libs.versions.toml`)
+- CI pipeline — **GitHub Actions** works well for KMP
+- Detekt + ktlint for code style
+- `expect`/`actual` for platform APIs like file I/O
 
-Ordered:
-1. Step one
-2. Step two
-3. Step three
+## Recommended order
 
-## Task list
+1. Get `commonMain` compiling with shared models
+2. Wire up networking (Ktor is the standard choice)
+3. Add platform-specific UI on top
+4. Set up publishing to Maven Central
 
-- [x] Parser extensions wired
-- [x] Compose rendering updated
-- [x] Admonition support
-- [x] Definition list support
-- [ ] LaTeX math rendering
-- [ ] Custom block renderers
+## Project status
+
+- [x] Shared data layer
+- [x] Ktor networking module
+- [x] Compose UI for Android + Desktop
+- [ ] iOS SwiftUI wrapper
+- [ ] Wasm target support
 """.trimIndent()
 
 private val BLOCKS_MARKDOWN = """
 ## Admonitions
 
 > [!NOTE]
-> Orca supports GitHub-style admonitions for highlighting important information.
+> Kotlin 2.1 introduced the new K2 compiler as the default. If your build breaks after updating, check for incompatible compiler plugins first.
 
 > [!TIP]
-> Use different admonition types to convey the right level of urgency.
+> Run `./gradlew dependencies --scan` to get a full dependency tree — super useful for debugging version conflicts.
 
 > [!IMPORTANT]
-> Breaking changes are documented in the changelog.
+> The `android` block in `build.gradle.kts` must come *after* the `kotlin` block, otherwise the AGP plugin won't pick up your source sets.
 
 > [!WARNING]
-> Experimental features may change without notice.
+> Proguard rules for KMP libraries need to be in the consumer module, not the library itself. This catches people off guard regularly.
 
 > [!CAUTION]
-> Do not use in production without thorough testing.
+> Never store API keys in `BuildConfig` for open-source projects — even if the repo is private now, it might not be later.
 
 ---
 
 ## Blockquote
 
-> Keep architecture simple and stable first.
+> The best code is the code you never write. Every line is a liability — it needs to be read, tested, maintained, and eventually deleted.
 >
-> Complexity is the enemy of reliability.
+> — Someone who's debugged enough legacy code
 
 ## Nested blockquote
 
-> Outer quote
-> > Inner nested quote
-> > with multiple lines
+> From the Kotlin style guide:
+> > Prefer `when` over chains of `if-else` when matching against multiple conditions. It's more readable and the compiler can optimize it better.
 >
-> Back to outer
+> This applies especially to sealed class hierarchies.
 
 ---
 
 ## Code blocks
 
 ```kotlin
-fun greet(name: String) {
-    println("Hello, ${'$'}name!")
-}
-
-// Syntax highlighting for keywords, strings, comments
-val items = listOf("apple", "banana", "cherry")
-items.forEach { item ->
-    println("Fruit: ${'$'}item")
+suspend fun fetchUser(id: Long): Result<User> = runCatching {
+    val response = httpClient.get("/api/users/${'$'}id")
+    if (response.status != HttpStatusCode.OK) {
+        error("Unexpected status: ${'$'}{response.status}")
+    }
+    response.body<UserDto>().toDomain()
 }
 ```
 
 ```python
-def fibonacci(n: int) -> list[int]:
-    ${"\"\"\""}Generate Fibonacci sequence.${"\"\"\""}
-    seq = [0, 1]
-    for i in range(2, n):
-        seq.append(seq[-1] + seq[-2])
-    return seq
+from pathlib import Path
+import json
 
-print(fibonacci(10))
+def load_config(path: str = "config.json") -> dict:
+    config_file = Path(path)
+    if not config_file.exists():
+        raise FileNotFoundError(f"Config not found: {path}")
+    return json.loads(config_file.read_text())
 ```
 
 ```sql
-SELECT u.name, COUNT(o.id) AS order_count
-FROM users u
-LEFT JOIN orders o ON u.id = o.user_id
-WHERE u.active = true
-GROUP BY u.name
-ORDER BY order_count DESC
-LIMIT 10;
+WITH monthly_revenue AS (
+    SELECT
+        DATE_TRUNC('month', created_at) AS month,
+        SUM(amount) AS revenue
+    FROM payments
+    WHERE status = 'completed'
+    GROUP BY 1
+)
+SELECT month, revenue,
+       revenue - LAG(revenue) OVER (ORDER BY month) AS growth
+FROM monthly_revenue
+ORDER BY month DESC;
 ```
 
 ---
 
 ## HTML block
 
-<p>This is a <b>bold</b> and <i>italic</i> HTML paragraph with a <a href="https://example.com">clickable link</a>.</p>
+<p>Most markdown renderers handle <b>basic HTML</b> inline — things like <i>emphasis</i>, <code>code</code>, and <a href="https://kotlinlang.org">links</a> work as expected.</p>
 
-<blockquote>HTML blockquote with <code>inline code</code> and <mark>highlighted text</mark>.</blockquote>
+<blockquote>The tricky part is <mark>highlighted text</mark> and nested structures — not every renderer gets those right.</blockquote>
 """.trimIndent()
 
 private val TABLES_MARKDOWN = """
 ## Tables
 
-### Module status
+### Kotlin targets — build time comparison
 
-| Module | Status | Platform | Docs |
+| Target | Clean build | Incremental | Binary size |
 |:-------|:------:|:--------:|-----:|
-| **orca-core** | :white_check_mark: Ready | All | [API](https://github.com) |
-| **orca-compose** | :white_check_mark: Ready | Android, Desktop, iOS | [Guide](https://github.com) |
-| sample-app | :wrench: Demo | Android | `this app` |
+| **Android** | 24s | 3s | 4.2 MB |
+| **Desktop (JVM)** | 31s | 5s | 18.7 MB |
+| **iOS arm64** | 48s | 12s | 9.1 MB |
+| **Wasm** | 52s | 8s | 2.8 MB |
 
-### Feature comparison
+### Common libraries for KMP
 
-| Feature | Supported | Notes |
-|:--------|:---------:|:------|
-| Bold / italic | :white_check_mark: | Standard markdown |
-| Strikethrough | :white_check_mark: | GFM extension |
-| Tables | :white_check_mark: | GFM extension |
-| Task lists | :white_check_mark: | GFM extension |
-| Footnotes | :white_check_mark: | PHP Markdown Extra |
-| Admonitions | :white_check_mark: | GitHub-style |
-| Definition lists | :white_check_mark: | PHP Markdown Extra |
-| Abbreviations | :white_check_mark: | PHP Markdown Extra |
-| Superscript / subscript | :white_check_mark: | `^super^` / `~sub~` |
-| Emoji shortcodes | :white_check_mark: | `:rocket:` etc. |
-| Syntax highlighting | :white_check_mark: | Regex-based |
-| Front matter | :white_check_mark: | YAML / TOML |
-| LaTeX math | :x: | Planned |
+| Library | Category | Platforms | Maturity |
+|:--------|:---------|:---------:|:---------|
+| [Ktor](https://ktor.io) | Networking | All | :white_check_mark: Stable |
+| [SQLDelight](https://github.com/cashapp/sqldelight) | Database | All | :white_check_mark: Stable |
+| [Koin](https://insert-koin.io) | DI | All | :white_check_mark: Stable |
+| [Napier](https://github.com/AdrielCafe/napier) | Logging | All | :wrench: Maintained |
+| [Multiplatform Settings](https://github.com/russhwolf/multiplatform-settings) | Key-value | All | :white_check_mark: Stable |
+| [KStore](https://github.com/AdrielCafe/kstore) | File storage | All | :wrench: Maintained |
+| [Compose ImageLoader](https://github.com/AdrielCafe/compose-imageloader) | Images | Android, iOS, Desktop | :warning: Alpha |
 
 ---
 
 ## Image
 
-![Markdown logo](https://raw.githubusercontent.com/github/explore/main/topics/markdown/markdown.png)
+![Kotlin logo](https://raw.githubusercontent.com/JetBrains/kotlin-web-site/master/static/images/kotlin-logo.png)
 """.trimIndent()
 
 private val ADVANCED_MARKDOWN = """
 ## Footnotes
 
-Orca supports footnotes[^1] for adding references and citations[^2].
+Kotlin was first announced in 2011[^1] and reached 1.0 in February 2016[^2]. Google declared it a first-class language for Android in 2017, and by 2019 it became the preferred language for Android development.
 
-[^1]: Footnotes appear at the bottom of the document. Click the number to jump here, and the arrow to go back.
-[^2]: Multiple footnotes are numbered automatically.
+[^1]: JetBrains unveiled Project Kotlin at JVM Language Summit. The name comes from Kotlin Island near St. Petersburg.
+[^2]: The 1.0 release focused on language stability and Java interop — no breaking changes since.
 
 ---
 
 ## Definition lists
 
-Orca
-:   A Compose Multiplatform markdown rendering library.
-:   Supports Android, iOS, Desktop, and Web targets.
+Coroutine
+:   A lightweight thread managed by the Kotlin runtime. Unlike OS threads, you can run thousands of coroutines without significant overhead.
 
-Markdown
-:   A lightweight markup language for creating formatted text using a plain-text editor.
+Structured concurrency
+:   A pattern where child coroutines are tied to a parent scope. If the parent cancels, all children cancel too — no orphaned tasks.
 
-Front matter
-:   Metadata at the beginning of a markdown file, delimited by `---` (YAML) or `+++` (TOML).
+Recomposition
+:   The process by which Compose re-executes composable functions when their inputs change. Skipping unchanged composables is what makes Compose fast.
 
 ---
 
 ## Abbreviations
 
-*[HTML]: Hyper Text Markup Language
-*[CSS]: Cascading Style Sheets
 *[KMP]: Kotlin Multiplatform
+*[JVM]: Java Virtual Machine
+*[AOT]: Ahead-of-Time
 
-Orca renders HTML content using Compose. It supports KMP targets and can style elements with CSS-like properties.
+KMP compiles to JVM bytecode on Android and Desktop, and uses AOT compilation for native targets like iOS and Linux.
 
 ---
 
 ## Thematic breaks
 
-Content above the break.
+Everything above this point covers language features.
 
 ---
 
@@ -559,90 +570,118 @@ Content above the break.
 
 ___
 
-Content below the breaks.
+Everything below gets into practical patterns.
 
 ---
 
 ## Deep nesting
 
-- Level 1
-    - Level 2 with **bold**
-        - Level 3 with `code`
-    - Back to level 2
-- Another level 1
+- Architecture patterns
+    - **MVVM** — standard for Compose apps
+        - ViewModel holds `StateFlow`
+        - UI collects and renders
+    - MVI — more structured, more boilerplate
+- Testing strategies
+    - Unit tests for business logic
+    - `@Preview` for UI snapshots
 
-> Quote with a list inside:
-> - Item one
-> - Item two
-> - Item three
+> From the Compose team's recommendations:
+> - Keep composables small and focused
+> - Hoist state to the caller
+> - Avoid side effects in composition
 >
-> And a code block:
+> Example of state hoisting:
 > ```kotlin
-> val x = 42
+> @Composable
+> fun SearchBar(query: String, onQueryChange: (String) -> Unit) {
+>     TextField(value = query, onValueChange = onQueryChange)
+> }
 > ```
 """.trimIndent()
 
 private val STREAMING_DEMO_MARKDOWN = """
-# Streaming Demo
+## How to structure a Kotlin Multiplatform project
 
-This content simulates **real-time streaming** from an LLM response.
+The key decision is how much code to share. Most teams start with shared data models and networking, then gradually move UI logic into `commonMain` as they get comfortable.
 
-## How it works
+### Recommended project layout
 
-Orca handles streaming gracefully with a configurable debounce:
+```
+shared/
+  commonMain/    -- models, use cases, repositories
+  androidMain/   -- Android-specific implementations
+  iosMain/       -- iOS-specific implementations
+app-android/     -- Android Compose UI
+app-ios/         -- SwiftUI wrapper
+app-desktop/     -- Desktop Compose UI
+```
+
+### Networking with Ktor
+
+Ktor is the standard choice for KMP networking. Here's a typical setup:
 
 ```kotlin
-Orca(
-    markdown = streamingText,
-    parser = parser,
-    streamingDebounceMs = 80L,
-)
+val client = HttpClient {
+    install(ContentNegotiation) { json() }
+    install(Logging) { level = LogLevel.HEADERS }
+    defaultRequest {
+        url("https://api.example.com/v2/")
+        header("Accept", "application/json")
+    }
+}
 ```
 
 > [!TIP]
-> The `streamingDebounceMs` parameter controls how often the markdown is re-parsed during streaming. Lower values give smoother updates but use more CPU.
+> Use `expect`/`actual` for the HTTP engine — `OkHttp` on Android, `Darwin` on iOS, `CIO` for desktop.
 
-## Features visible during streaming
+### Things that trip people up
 
-- **Partial rendering** — content appears as it arrives
-- **Incremental parsing** — only re-parses after debounce
-- **Cache-friendly** — uses `parseCacheKey` to avoid duplicate work
-- ~~No flickering~~ — smooth transitions between parse results
+- **Serialization** — `@Serializable` classes must be in `commonMain`, not platform modules
+- **Coroutine scopes** — iOS doesn't have `viewModelScope`, you'll need a custom scope
+- ~~Freezing~~ — no longer needed since the new Kotlin/Native memory model
+- **Resources** — each platform handles strings, images, and assets differently
 
-### Code example
+### Database layer
 
-```python
-async def stream_response(prompt: str):
-    async for chunk in llm.stream(prompt):
-        yield chunk.text
+```kotlin
+// SQLDelight generates type-safe Kotlin from SQL
+val players: Flow<List<Player>> =
+    playerQueries.selectAll()
+        .asFlow()
+        .mapToList(Dispatchers.Default)
 ```
 
-The parser handles incomplete markdown gracefully — unclosed **bold, *italic*, or `code` spans are rendered as-is until the closing delimiter arrives.
-
-:sparkles: **That's the streaming demo!** :rocket:
+That covers the basics — the rest is just connecting the pieces and writing tests.
 """.trimIndent()
 
 private val PLAYGROUND_DEFAULT_MARKDOWN = """
-# Hello, Orca! :wave:
+# Release notes — v2.1.0
 
-Try editing this markdown to see **live rendering**.
+This release focuses on **performance** and *developer experience*.
 
-## What to try
+## Changes
 
-- **Bold** and *italic* text
-- ~~Strikethrough~~ and `inline code`
-- [Links](https://github.com)
-- Emoji :rocket: :fire: :sparkles:
+- Reduced recomposition count by **40%** in large documents
+- Added `streamingDebounceMs` parameter for real-time use cases
+- Fixed ~~incorrect~~ table column alignment on RTL layouts
+- New `OrcaRootLayout.COLUMN` option for non-scrollable containers
 
-> Blockquotes work too!
+## Migration
 
 ```kotlin
-val greeting = "Hello from Orca!"
-println(greeting)
+// Before
+Orca(markdown = text, parser = parser)
+
+// After — explicit cache key recommended
+Orca(markdown = text, parser = parser, parseCacheKey = "my-key")
 ```
 
-- [x] Try the playground
-- [ ] Build something cool
+> [!NOTE]
+> The `parseCacheKey` parameter is optional but improves performance when the same content is rendered in multiple places.
+
+- [x] Update dependencies
+- [x] Run full test suite
+- [ ] Update documentation site
 """.trimIndent()
 
 // endregion
