@@ -178,9 +178,16 @@ private fun tryParseDefinitionList(
     )
 }
 
+/**
+ * Strip one level of continuation indent (tab or 4+ spaces).
+ * Returns the unindented line, or null if the line is not indented.
+ *
+ * Uses 4-space indent to match footnote continuation behaviour
+ * ([stripFootnoteContinuationIndent]) and the PHP Markdown Extra spec.
+ */
 private fun stripDefinitionContinuation(line: String): String? {
     if (line.startsWith("\t")) return line.removePrefix("\t")
-    if (line.startsWith("  ")) return line.substring(2)
+    if (line.startsWith("    ")) return line.substring(4)
     return null
 }
 

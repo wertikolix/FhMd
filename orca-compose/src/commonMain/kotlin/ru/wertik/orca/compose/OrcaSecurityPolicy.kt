@@ -28,6 +28,19 @@ fun interface OrcaSecurityPolicy {
  * Built-in security policy implementations.
  *
  * [Default] allows `http`, `https` for images and `http`, `https`, `mailto` for links.
+ *
+ * Schemes not in the allow-list are **blocked by default**. This includes potentially
+ * dangerous schemes such as `javascript:` and `data:`. If you need `data:` URLs (e.g.
+ * for inline base64 images), explicitly opt in via [byAllowedSchemes]:
+ *
+ * ```kotlin
+ * OrcaSecurityPolicies.byAllowedSchemes(
+ *     imageSchemes = setOf("http", "https", "data"),
+ * )
+ * ```
+ *
+ * **Warning:** allowing `data:` for links enables injection of arbitrary content
+ * (e.g. `data:text/html,...`). Only allow it for image sources when you trust the input.
  */
 object OrcaSecurityPolicies {
     /** Default policy: allows http/https links and images, plus mailto for links. */

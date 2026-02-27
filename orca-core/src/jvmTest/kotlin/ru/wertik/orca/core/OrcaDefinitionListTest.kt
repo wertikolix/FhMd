@@ -109,6 +109,35 @@ class OrcaDefinitionListTest {
         assertTrue(doc.blocks.all { it !is OrcaBlock.DefinitionList })
     }
 
+    @Test
+    fun `continuation lines require 4-space indent`() {
+        // Lines indented by only 2 spaces should NOT be treated as continuation.
+        val markdown = """
+            |Term
+            |: First line
+            |    continuation with 4 spaces
+        """.trimMargin()
+
+        val doc = parser.parse(markdown)
+        val dl = assertIs<OrcaBlock.DefinitionList>(doc.blocks[0])
+        assertEquals(1, dl.items.size)
+        assertEquals(1, dl.items[0].definitions.size)
+    }
+
+    @Test
+    fun `2-space indented line is not continuation`() {
+        // A line with only 2 spaces of indent should NOT be captured as definition continuation.
+        val markdown = """
+            |Term
+            |: Definition
+            |  not a continuation
+        """.trimMargin()
+
+        val doc = parser.parse(markdown)
+        val defLists = doc.blocks.filterIsInstance<OrcaBlock.DefinitionList>()
+        assertTrue(defLists.isNotEmpty())
+    }
+
     private fun List<OrcaInline>.toPlainText(): String {
         return buildString {
             for (inline in this@toPlainText) {

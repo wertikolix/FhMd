@@ -12,29 +12,27 @@ internal class OrcaParserCache(
         input: String,
         parse: () -> OrcaParseResult,
     ): OrcaParseResult {
-        val cached = lock.withLock {
+        return lock.withLock {
             val entry = entries[key]
             if (entry != null && entry.input == input) {
+                // Cache hit — move to end (LRU refresh).
                 entries.remove(key)
                 entries[key] = entry
-                entry.result
-            } else {
-                null
+                return@withLock entry.result
             }
-        }
-        if (cached != null) return cached
 
-        val parsed = parse()
+            // Cache miss — parse under lock to prevent duplicate work
+            // and ensure consistent cache state for the same key.
+            val parsed = parse()
 
-        lock.withLock {
             entries.remove(key)
             entries[key] = CachedParseEntry(
                 input = input,
                 result = parsed,
             )
             trimToLimit()
+            parsed
         }
-        return parsed
     }
 
     fun clear() {

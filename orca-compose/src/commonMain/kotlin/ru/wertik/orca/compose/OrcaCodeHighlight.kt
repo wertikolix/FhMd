@@ -218,4 +218,7 @@ private val STRING_REGEX = Regex("""("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')""")
 private val SLASH_LINE_COMMENT_REGEX = Regex("""//.*$""", setOf(RegexOption.MULTILINE))
 private val HASH_LINE_COMMENT_REGEX = Regex("""#.*$""", setOf(RegexOption.MULTILINE))
 private val SQL_LINE_COMMENT_REGEX = Regex("""--.*$""", setOf(RegexOption.MULTILINE))
-private val BLOCK_COMMENT_REGEX = Regex("""/\*[\s\S]*?\*/""")
+// Use a character class [^*] with explicit star handling to avoid catastrophic
+// backtracking on unclosed /* sequences.  The pattern matches:
+//   /*  (any char that is NOT '*', OR a '*' NOT followed by '/')  */
+private val BLOCK_COMMENT_REGEX = Regex("""/\*(?:[^*]|\*(?!/))*\*/""")

@@ -136,6 +136,8 @@ internal fun OrcaBlockNode(
         is OrcaBlock.HtmlBlock -> HtmlBlockNode(
             block = block,
             style = style,
+            onLinkClick = onLinkClick,
+            securityPolicy = securityPolicy,
         )
 
         is OrcaBlock.Admonition -> AdmonitionNode(
@@ -415,13 +417,17 @@ private fun FootnotesNode(
 private fun HtmlBlockNode(
     block: OrcaBlock.HtmlBlock,
     style: OrcaStyle,
+    onLinkClick: (String) -> Unit,
+    securityPolicy: OrcaSecurityPolicy,
 ) {
-    val rendered = remember(block.html, style) {
+    val currentOnLinkClick by rememberUpdatedState(onLinkClick)
+
+    val rendered = remember(block.html, style, securityPolicy) {
         renderHtmlToAnnotatedString(
             html = block.html,
             style = style,
-            onLinkClick = {},
-            securityPolicy = OrcaSecurityPolicies.Default,
+            onLinkClick = { url -> currentOnLinkClick(url) },
+            securityPolicy = securityPolicy,
         )
     }
     Text(

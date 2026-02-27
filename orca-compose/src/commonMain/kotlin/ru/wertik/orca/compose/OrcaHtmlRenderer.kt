@@ -35,8 +35,16 @@ internal fun renderHtmlToAnnotatedString(
     securityPolicy: OrcaSecurityPolicy,
 ): AnnotatedString {
     return buildAnnotatedString {
-        val styleStack = mutableListOf<SpanStyle>()
+        // Track the number of pushStyle() calls we've made on the builder so that
+        // we never call pop() more times than we've pushed — which would crash on
+        // malformed HTML like </b></b> without matching opening tags.
+        var builderPushCount = 0
         var lastEnd = 0
+
+        // Per-tag tracking so we only pop the style that was actually pushed for
+        // a given tag name. This prevents orphan closing tags from popping styles
+        // that belong to a different element.
+        val tagPushStack = mutableListOf<String>()
 
         TAG_REGEX.findAll(html).forEach { match ->
             val beforeTag = html.substring(lastEnd, match.range.first)
@@ -55,49 +63,65 @@ internal fun renderHtmlToAnnotatedString(
                     "b", "strong" -> {
                         val s = SpanStyle(fontWeight = FontWeight.Bold)
                         pushStyle(s)
-                        styleStack.add(s)
+                        builderPushCount++
+                        tagPushStack.add(tagName)
                     }
                     "i", "em" -> {
                         val s = SpanStyle(fontStyle = FontStyle.Italic)
                         pushStyle(s)
-                        styleStack.add(s)
+                        builderPushCount++
+                        tagPushStack.add(tagName)
                     }
                     "s", "del", "strike" -> {
                         val s = SpanStyle(textDecoration = TextDecoration.LineThrough)
                         pushStyle(s)
-                        styleStack.add(s)
+                        builderPushCount++
+                        tagPushStack.add(tagName)
                     }
                     "u", "ins" -> {
                         val s = SpanStyle(textDecoration = TextDecoration.Underline)
                         pushStyle(s)
-                        styleStack.add(s)
+                        builderPushCount++
+                        tagPushStack.add(tagName)
                     }
                     "code" -> {
                         val s = style.inline.inlineCode
                         pushStyle(s)
-                        styleStack.add(s)
+                        builderPushCount++
+                        tagPushStack.add(tagName)
                     }
                     "sup" -> {
                         val s = SpanStyle(baselineShift = BaselineShift.Superscript, fontSize = 12.sp)
                         pushStyle(s)
-                        styleStack.add(s)
+                        builderPushCount++
+                        tagPushStack.add(tagName)
                     }
                     "sub" -> {
                         val s = SpanStyle(baselineShift = BaselineShift.Subscript, fontSize = 12.sp)
                         pushStyle(s)
-                        styleStack.add(s)
+                        builderPushCount++
+                        tagPushStack.add(tagName)
                     }
                     "mark" -> {
                         val s = SpanStyle(background = Color(0x40FFEB3B))
                         pushStyle(s)
-                        styleStack.add(s)
+                        builderPushCount++
+                        tagPushStack.add(tagName)
                     }
                     "a" -> {
                         val href = HREF_REGEX.find(attrs)?.groupValues?.get(1).orEmpty()
                         if (href.isNotEmpty() && securityPolicy.isAllowed(OrcaUrlType.LINK, href)) {
-                            val s = style.inline.link
-                            pushStyle(s)
-                            styleStack.add(s)
+                            val linkAnnotation = LinkAnnotation.Url(
+                                url = href,
+                                styles = TextLinkStyles(style = style.inline.link),
+                                linkInteractionListener = LinkInteractionListener { annotation ->
+                                    val target = (annotation as? LinkAnnotation.Url)?.url ?: href
+                                    onLinkClick(target)
+                                },
+                            )
+                            pushLink(linkAnnotation)
+                            builderPushCount++
+                            tagPushStack.add(tagName)
                         }
                     }
                     "p", "div" -> {
@@ -111,7 +135,8 @@ internal fun renderHtmlToAnnotatedString(
                         }
                         val s = SpanStyle(fontWeight = FontWeight.Bold)
                         pushStyle(s)
-                        styleStack.add(s)
+                        builderPushCount++
+                        tagPushStack.add(tagName)
                     }
                     "li" -> {
                         if (length > 0 && !endsWith("\n")) {
@@ -132,12 +157,14 @@ internal fun renderHtmlToAnnotatedString(
                         }
                         val s = SpanStyle(fontStyle = FontStyle.Italic, color = Color(0xFF6D6D6D))
                         pushStyle(s)
-                        styleStack.add(s)
+                        builderPushCount++
+                        tagPushStack.add(tagName)
                     }
                     "pre" -> {
                         val s = SpanStyle(fontFamily = FontFamily.Monospace)
                         pushStyle(s)
-                        styleStack.add(s)
+                        builderPushCount++
+                        tagPushStack.add(tagName)
                     }
                 }
             } else {
@@ -147,12 +174,19 @@ internal fun renderHtmlToAnnotatedString(
                     "h1", "h2", "h3", "h4", "h5", "h6",
                     "blockquote", "pre",
                     -> {
-                        if (styleStack.isNotEmpty()) {
-                            pop()
-                            styleStack.removeLastOrNull()
+                        if (builderPushCount > 0 && tagPushStack.isNotEmpty()) {
+                            // Only pop if the most recent push was for this tag type,
+                            // or a compatible one (e.g. </b> can close <strong>).
+                            val normalizedClosing = normalizeTagName(tagName)
+                            val lastPushed = tagPushStack.lastOrNull()?.let { normalizeTagName(it) }
+                            if (lastPushed == normalizedClosing) {
+                                pop()
+                                builderPushCount--
+                                tagPushStack.removeLastOrNull()
+                            }
                         }
                     }
-                    "p", "div", "li", "blockquote" -> {
+                    "p", "div", "li" -> {
                         if (length > 0 && !endsWith("\n")) {
                             append("\n")
                         }
@@ -179,6 +213,20 @@ private fun decodeHtmlEntities(text: String): String {
         result = result.replace(entity, replacement)
     }
     return result
+}
+
+/**
+ * Normalize tag names so that synonymous tags (e.g. `<b>` / `<strong>`) are treated
+ * as the same when matching opening and closing tags in the push/pop stack.
+ */
+private fun normalizeTagName(tag: String): String {
+    return when (tag) {
+        "strong" -> "b"
+        "em" -> "i"
+        "del", "strike" -> "s"
+        "ins" -> "u"
+        else -> tag
+    }
 }
 
 internal fun extractHtmlPlainText(html: String): String {

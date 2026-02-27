@@ -79,6 +79,19 @@ private fun extractDelimitedFrontMatter(
     )
 }
 
+/**
+ * Parse front matter entries as flat key-value pairs.
+ *
+ * **Limitations:** This is an intentionally simple parser that handles single-line
+ * `key: value` (YAML) or `key = value` (TOML) entries. The following are NOT supported:
+ * - Nested objects / tables
+ * - Arrays (YAML `- item` lines are skipped)
+ * - Multi-line values (block scalars, folded scalars)
+ * - TOML inline tables
+ *
+ * For full YAML/TOML support, access [OrcaFrontMatter.raw] and parse it with a
+ * dedicated library (e.g. kaml, kotlinx-serialization-toml).
+ */
 private fun parseFrontMatterEntries(
     raw: String,
     format: FrontMatterFormat,

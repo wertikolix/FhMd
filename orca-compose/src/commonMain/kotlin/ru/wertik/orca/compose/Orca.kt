@@ -360,7 +360,7 @@ private fun blockContentKey(block: OrcaBlock): String {
     return when (block) {
         is OrcaBlock.Heading -> "H${block.level}:${inlineContentDigest(block.content)}"
         is OrcaBlock.Paragraph -> "P:${inlineContentDigest(block.content)}"
-        is OrcaBlock.CodeBlock -> "Code:${block.language.orEmpty()}:${block.code.take(64).hashCode()}"
+        is OrcaBlock.CodeBlock -> "Code:${block.language.orEmpty()}:${stableHash(block.code)}"
         is OrcaBlock.ListBlock -> {
             val firstItemDigest = block.items.firstOrNull()
                 ?.blocks
@@ -391,10 +391,27 @@ private fun blockContentKey(block: OrcaBlock): String {
         is OrcaBlock.Image -> "Img:${block.source.take(64)}"
         is OrcaBlock.ThematicBreak -> "HR"
         is OrcaBlock.Footnotes -> "FN:${block.definitions.size}:${block.definitions.firstOrNull()?.label.orEmpty()}"
-        is OrcaBlock.HtmlBlock -> "Html:${block.html.take(32).hashCode()}"
+        is OrcaBlock.HtmlBlock -> "Html:${stableHash(block.html)}"
         is OrcaBlock.Admonition -> "Adm:${block.type.name}:${block.blocks.size}"
         is OrcaBlock.DefinitionList -> "DL:${block.items.size}:${block.items.firstOrNull()?.let { inlineContentDigest(it.term) }.orEmpty()}"
     }
+}
+
+/**
+ * FNV-1a 32-bit hash — distributes much better than [String.hashCode] for short
+ * prefixes, dramatically reducing key collisions in the LazyColumn.
+ */
+private fun stableHash(value: String): String {
+    var hash = 0x811c9dc5.toInt()
+    val limit = value.length.coerceAtMost(128)
+    for (i in 0 until limit) {
+        hash = hash xor value[i].code
+        hash = hash * 0x01000193
+    }
+    // Include length so that strings sharing a 128-char prefix but differing
+    // in length still produce different hashes.
+    hash = hash xor value.length
+    return hash.toUInt().toString(36)
 }
 
 private fun inlineContentDigest(inlines: List<ru.wertik.orca.core.OrcaInline>): String {
@@ -402,10 +419,10 @@ private fun inlineContentDigest(inlines: List<ru.wertik.orca.core.OrcaInline>): 
     val text = buildString {
         for (inline in inlines) {
             appendInlineText(inline)
-            if (length > 64) break
+            if (length > 128) break
         }
     }
-    return text.take(64).hashCode().toUInt().toString(36)
+    return stableHash(text)
 }
 
 private fun StringBuilder.appendInlineText(inline: ru.wertik.orca.core.OrcaInline) {
