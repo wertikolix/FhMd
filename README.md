@@ -7,7 +7,7 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ## Status
 
-- Current stable minor: `0.8.3`
+- Current stable minor: `0.8.4`
 - Maturity: lightweight production-ready core subset (Markdown-first)
 
 ## Documentation
@@ -44,8 +44,8 @@ Compose Multiplatform Markdown renderer. Targets **Android**, **iOS**, **Desktop
 
 ```kotlin
 // Kotlin Multiplatform (commonMain)
-implementation("ru.wertik:orca-core:0.8.3")
-implementation("ru.wertik:orca-compose:0.8.3")
+implementation("ru.wertik:orca-core:0.8.4")
+implementation("ru.wertik:orca-compose:0.8.4")
 ```
 
 Gradle resolves platform-specific artifacts automatically (`orca-core-jvm`, `orca-compose-android`, etc.).
@@ -168,7 +168,7 @@ data class OrcaParseResult(
 )
 ```
 
-## Supported Syntax (`0.8.3`)
+## Supported Syntax (`0.8.4`)
 
 ### Blocks
 
@@ -257,11 +257,6 @@ data class OrcaParseResult(
 - shimmer/skeleton placeholder while loading (no more raw text fallback)
 - smooth crossfade transition on load
 - error state with icon fallback
-
-### Mermaid diagrams
-
-- mermaid code blocks show a styled placeholder with diagram type label
-- no WebView dependency — placeholder only (rendering is left to the consumer)
 
 ### Table rendering
 

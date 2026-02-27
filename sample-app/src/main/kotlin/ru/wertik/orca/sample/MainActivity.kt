@@ -515,18 +515,6 @@ ORDER BY month DESC;
 
 <blockquote>The tricky part is <mark>highlighted text</mark> and nested structures — not every renderer gets those right.</blockquote>
 
----
-
-## Mermaid diagram (placeholder)
-
-```mermaid
-graph TD
-    A[Start] --> B{Decision}
-    B -->|Yes| C[Do something]
-    B -->|No| D[Do something else]
-    C --> E[End]
-    D --> E
-```
 """.trimIndent()
 
 private val TABLES_MARKDOWN = """

@@ -32,7 +32,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -101,11 +100,7 @@ internal fun OrcaBlockNode(
             onFootnoteBackClick = onFootnoteBackClick,
         )
 
-        is OrcaBlock.CodeBlock -> if (block.language?.trim()?.lowercase() == "mermaid") {
-            MermaidPlaceholderNode(block = block, style = style)
-        } else {
-            CodeBlockNode(block = block, style = style)
-        }
+        is OrcaBlock.CodeBlock -> CodeBlockNode(block = block, style = style)
 
         is OrcaBlock.Image -> MarkdownImageNode(
             block = block,
@@ -705,58 +700,6 @@ private fun DefinitionListNode(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun MermaidPlaceholderNode(
-    block: OrcaBlock.CodeBlock,
-    style: OrcaStyle,
-) {
-    val diagramType = remember(block.code) {
-        detectMermaidDiagramType(block.code)
-    }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(style.code.shape)
-            .background(style.code.background, style.code.shape)
-            .border(style.code.borderWidth, style.code.borderColor, style.code.shape)
-            .padding(style.code.padding)
-            .semantics { contentDescription = "Mermaid $diagramType diagram" },
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(
-            text = "\uD83E\uDDDC\u200D\u2640\uFE0F",
-            style = style.typography.heading3.copy(
-                color = style.code.highlightComment.color,
-            ),
-        )
-        Text(
-            text = "Mermaid — $diagramType",
-            style = style.code.languageLabel.copy(
-                color = style.code.highlightComment.color,
-            ),
-        )
-    }
-}
-
-private fun detectMermaidDiagramType(code: String): String {
-    val firstLine = code.trim().lines().firstOrNull()?.trim()?.lowercase() ?: ""
-    return when {
-        firstLine.startsWith("graph") || firstLine.startsWith("flowchart") -> "Flowchart"
-        firstLine.startsWith("sequencediagram") || firstLine.startsWith("sequence") -> "Sequence"
-        firstLine.startsWith("classdiagram") || firstLine.startsWith("class") -> "Class"
-        firstLine.startsWith("statediagram") || firstLine.startsWith("state") -> "State"
-        firstLine.startsWith("erdiagram") || firstLine.startsWith("er") -> "ER"
-        firstLine.startsWith("gantt") -> "Gantt"
-        firstLine.startsWith("pie") -> "Pie"
-        firstLine.startsWith("gitgraph") -> "Git Graph"
-        firstLine.startsWith("journey") -> "Journey"
-        firstLine.startsWith("mindmap") -> "Mindmap"
-        firstLine.startsWith("timeline") -> "Timeline"
-        else -> "Diagram"
     }
 }
 
